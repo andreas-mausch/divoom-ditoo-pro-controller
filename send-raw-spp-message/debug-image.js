@@ -27,6 +27,9 @@ const readBitsFromBuffer = (buffer, startingBit, bitCount) => {
 };
 
 const frameHeader = (buffer, offset) => ({
+  length: buffer.readUInt16LE(offset + 1),
+  timeInMilliseconds: buffer.readUInt16LE(offset + 3),
+  resetPalette: buffer.readUInt8(offset + 5),
   colorCount: buffer.readUInt8(offset + 6)
 });
 
@@ -35,7 +38,7 @@ const debugImage = (imageBuffer) => {
 
   const firstFrameHeader = frameHeader(imageBuffer, 0);
   const bitsPerPixel = Math.ceil(Math.log2(firstFrameHeader.colorCount));
-  console.log("colorCount", firstFrameHeader.colorCount);
+  console.log("header", firstFrameHeader);
   console.log("bitsPerPixel", bitsPerPixel);
 
   let palette = [];
