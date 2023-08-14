@@ -1,11 +1,14 @@
 import fullcolor from "fullcolor";
 import { sprintf } from "sprintf-js";
 
+const BITS_PER_BYTE = 8;
+
 const readBitsFromByte = (byte, startingBit, bitCount) => {
   const bitmask = Math.pow(2, bitCount) - 1;
-  const bitShift = startingBit % 8;
+  const maximumByteBitmask = Math.pow(2, BITS_PER_BYTE) - 1;
+  const bitShift = startingBit % BITS_PER_BYTE;
 
-  return ((byte & (bitmask << bitShift)) & 0xFF) >> bitShift;
+  return ((byte & (bitmask << bitShift)) & maximumByteBitmask) >> bitShift;
 }
 
 const readBitsFromBuffer = (buffer, startingBit, bitCount) => {
@@ -14,8 +17,8 @@ const readBitsFromBuffer = (buffer, startingBit, bitCount) => {
 
   while (bitsLeftToRead > 0) {
     const bitsRead = bitCount - bitsLeftToRead;
-    const bitsToReadFromCurrentByte = Math.min(8 - startingBit % 8, bitsLeftToRead);
-    result += readBitsFromByte(buffer.readUInt8(Math.floor((startingBit + bitsRead) / 8)), (startingBit + bitsRead) % 8, bitsToReadFromCurrentByte) << bitsRead;
+    const bitsToReadFromCurrentByte = Math.min(BITS_PER_BYTE - startingBit % BITS_PER_BYTE, bitsLeftToRead);
+    result += readBitsFromByte(buffer.readUInt8(Math.floor((startingBit + bitsRead) / BITS_PER_BYTE)), (startingBit + bitsRead) % BITS_PER_BYTE, bitsToReadFromCurrentByte) << bitsRead;
     bitsLeftToRead -= bitsToReadFromCurrentByte;
   }
 
@@ -45,14 +48,14 @@ const debugImage = (imageBuffer) => {
 
   const pixelsStart = 7 + colorCount * 3;
 
-  for (let frame = 0; imageBuffer.length >= pixelsStart + (frame + 1) * 16 * 16 * bitsPerPixel / 8; frame++) {
-    const frameStart = pixelsStart + frame * 16 * 16 * bitsPerPixel / 8;
+  for (let frame = 0; imageBuffer.length >= pixelsStart + (frame + 1) * 16 * 16 * bitsPerPixel / BITS_PER_BYTE; frame++) {
+    const frameStart = pixelsStart + frame * 16 * 16 * bitsPerPixel / BITS_PER_BYTE;
     const framePixelStart = frameStart + frame * 7;
 
     for (let y = 0; y < 16; y++) {
       for (let x = 0; x < 16; x++) {
         const index = y * 16 + x;
-        const startingBit = framePixelStart * 8 + index * bitsPerPixel;
+        const startingBit = framePixelStart * BITS_PER_BYTE + index * bitsPerPixel;
         const color = readBitsFromBuffer(imageBuffer, startingBit, bitsPerPixel);
 
         if (color >= palette.length) {
