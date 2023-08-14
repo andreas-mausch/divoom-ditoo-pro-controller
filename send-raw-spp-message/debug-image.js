@@ -1,3 +1,5 @@
+import fullcolor from "fullcolor";
+
 const padToTwo = (str) => str.padStart(2, '0');
 const toHexString = (number) => padToTwo(number.toString(16))
 
@@ -12,7 +14,7 @@ const debugImage = (imageBuffer) => {
     const green = imageBuffer.readUInt8(11 + i*3);
     const blue = imageBuffer.readUInt8(12 + i*3);
 
-    console.log("Color [%d]: #%s%s%s \x1b[38;2;%d;%d;%dm████\x1b[0m", i, toHexString(red), toHexString(green), toHexString(blue), red, green, blue);
+    console.log("Color [%d]: #%s%s%s %s", i, toHexString(red), toHexString(green), toHexString(blue), fullcolor("████", red, green, blue));
   }
 }
 

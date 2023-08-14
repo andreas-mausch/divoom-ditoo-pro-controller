@@ -12,6 +12,7 @@
   "license": "MIT",
   "dependencies": {
     "bluetooth-serial-port": "^3.0.2",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "fullcolor": "^0.1.1"
   }
 }
