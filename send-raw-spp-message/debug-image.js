@@ -46,10 +46,13 @@ const debugImage = (imageBuffer) => {
   const pixelsStart = 7 + colorCount * 3;
 
   for (let frame = 0; imageBuffer.length >= pixelsStart + (frame + 1) * 16 * 16 * bitsPerPixel / 8; frame++) {
+    const frameStart = pixelsStart + frame * 16 * 16 * bitsPerPixel / 8;
+    const framePixelStart = frameStart + frame * 7;
+
     for (let y = 0; y < 16; y++) {
       for (let x = 0; x < 16; x++) {
         const index = y * 16 + x;
-        const startingBit = pixelsStart * 8 + frame * (16 * 16 * bitsPerPixel + 56) + index * bitsPerPixel;
+        const startingBit = framePixelStart * 8 + index * bitsPerPixel;
         const color = readBitsFromBuffer(imageBuffer, startingBit, bitsPerPixel);
 
         if (color >= palette.length) {
