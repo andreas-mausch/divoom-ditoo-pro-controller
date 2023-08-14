@@ -52,14 +52,16 @@ const debugImage = (imageBuffer) => {
   }
 
   const pixelsStart = FRAME_HEADER_LENGTH + firstFrameHeader.colorCount * 3;
+  const imageWidth = 16;
+  const imageHeight = 16;
 
-  for (let frame = 0; imageBuffer.length >= pixelsStart + (frame + 1) * 16 * 16 * bitsPerPixel / BITS_PER_BYTE; frame++) {
-    const frameStart = pixelsStart + frame * 16 * 16 * bitsPerPixel / BITS_PER_BYTE;
+  for (let frame = 0; imageBuffer.length >= pixelsStart + (frame + 1) * imageWidth * imageHeight * bitsPerPixel / BITS_PER_BYTE; frame++) {
+    const frameStart = pixelsStart + frame * imageWidth * imageHeight * bitsPerPixel / BITS_PER_BYTE;
     const framePixelStart = frameStart + frame * FRAME_HEADER_LENGTH;
 
-    for (let y = 0; y < 16; y++) {
-      for (let x = 0; x < 16; x++) {
-        const index = y * 16 + x;
+    for (let y = 0; y < imageHeight; y++) {
+      for (let x = 0; x < imageWidth; x++) {
+        const index = y * imageWidth + x;
         const startingBit = framePixelStart * BITS_PER_BYTE + index * bitsPerPixel;
         const color = readBitsFromBuffer(imageBuffer, startingBit, bitsPerPixel);
 
