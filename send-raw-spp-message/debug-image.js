@@ -2,6 +2,7 @@ import fullcolor from "fullcolor";
 import { sprintf } from "sprintf-js";
 
 const BITS_PER_BYTE = 8;
+const FRAME_HEADER_LENGTH = 7;
 
 const readBitsFromByte = (byte, startingBit, bitCount) => {
   const bitmask = Math.pow(2, bitCount) - 1;
@@ -9,7 +10,7 @@ const readBitsFromByte = (byte, startingBit, bitCount) => {
   const bitShift = startingBit % BITS_PER_BYTE;
 
   return ((byte & (bitmask << bitShift)) & maximumByteBitmask) >> bitShift;
-}
+};
 
 const readBitsFromBuffer = (buffer, startingBit, bitCount) => {
   let bitsLeftToRead = bitCount;
@@ -23,22 +24,26 @@ const readBitsFromBuffer = (buffer, startingBit, bitCount) => {
   }
 
   return result;
-}
+};
+
+const frameHeader = (buffer, offset) => ({
+  colorCount: buffer.readUInt8(offset + 6)
+});
 
 const debugImage = (imageBuffer) => {
   console.log("Debug image information:");
 
-  const colorCount = imageBuffer.readUInt8(6);
-  const bitsPerPixel = Math.ceil(Math.log2(colorCount));
-  console.log("colorCount", colorCount);
+  const firstFrameHeader = frameHeader(imageBuffer, 0);
+  const bitsPerPixel = Math.ceil(Math.log2(firstFrameHeader.colorCount));
+  console.log("colorCount", firstFrameHeader.colorCount);
   console.log("bitsPerPixel", bitsPerPixel);
 
   let palette = [];
 
-  for (let i = 0; i < colorCount; i++) {
-    const red = imageBuffer.readUInt8(7 + i * 3);
-    const green = imageBuffer.readUInt8(8 + i * 3);
-    const blue = imageBuffer.readUInt8(9 + i * 3);
+  for (let i = 0; i < firstFrameHeader.colorCount; i++) {
+    const red = imageBuffer.readUInt8(FRAME_HEADER_LENGTH + i * 3);
+    const green = imageBuffer.readUInt8(FRAME_HEADER_LENGTH + 1 + i * 3);
+    const blue = imageBuffer.readUInt8(FRAME_HEADER_LENGTH + 2 + i * 3);
 
     const hexString = sprintf("#%02x%02x%02x", red, green, blue);
     console.log(sprintf("Color [%03d]: %s %s", i, hexString, fullcolor("████", hexString)));
@@ -46,11 +51,11 @@ const debugImage = (imageBuffer) => {
     palette.push(hexString);
   }
 
-  const pixelsStart = 7 + colorCount * 3;
+  const pixelsStart = FRAME_HEADER_LENGTH + firstFrameHeader.colorCount * 3;
 
   for (let frame = 0; imageBuffer.length >= pixelsStart + (frame + 1) * 16 * 16 * bitsPerPixel / BITS_PER_BYTE; frame++) {
     const frameStart = pixelsStart + frame * 16 * 16 * bitsPerPixel / BITS_PER_BYTE;
-    const framePixelStart = frameStart + frame * 7;
+    const framePixelStart = frameStart + frame * FRAME_HEADER_LENGTH;
 
     for (let y = 0; y < 16; y++) {
       for (let x = 0; x < 16; x++) {
