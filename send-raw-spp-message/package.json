@@ -1,0 +1,16 @@
+{
+  "name": "send-raw-spp-message",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "run": "node index.js",
+    "debug-image": "node debug-image.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bluetooth-serial-port": "^3.0.2"
+  }
+}
