@@ -1,7 +1,5 @@
 import fullcolor from "fullcolor";
-
-const padToTwo = (str) => str.padStart(2, '0');
-const toHexString = (number) => padToTwo(number.toString(16))
+import { sprintf } from "sprintf-js";
 
 const debugImage = (imageBuffer) => {
   console.log("Debug image information:");
@@ -14,7 +12,9 @@ const debugImage = (imageBuffer) => {
     const green = imageBuffer.readUInt8(11 + i*3);
     const blue = imageBuffer.readUInt8(12 + i*3);
 
-    console.log("Color [%d]: #%s%s%s %s", i, toHexString(red), toHexString(green), toHexString(blue), fullcolor("████", red, green, blue));
+    const hexString = sprintf("#%02x%02x%02x", red, green, blue);
+
+    console.log("Color [%d]: %s %s", i, hexString, fullcolor("████", hexString));
   }
 }
 
