@@ -1,11 +1,34 @@
 import fullcolor from "fullcolor";
 import { sprintf } from "sprintf-js";
 
+const readBitsFromByte = (byte, startingBit, bitCount) => {
+  const bitmask = Math.pow(2, bitCount) - 1;
+  const bitShift = startingBit % 8;
+
+  return ((byte & (bitmask << bitShift)) & 0xFF) >> bitShift;
+}
+
+const readBitsFromBuffer = (buffer, startingBit, bitCount) => {
+  let bitsLeftToRead = bitCount;
+  let result = 0;
+
+  while (bitsLeftToRead > 0) {
+    const bitsRead = bitCount - bitsLeftToRead;
+    const bitsToReadFromCurrentByte = Math.min(8 - startingBit % 8, bitsLeftToRead);
+    result += readBitsFromByte(buffer.readUInt8(Math.floor((startingBit + bitsRead) / 8)), (startingBit + bitsRead) % 8, bitsToReadFromCurrentByte) << bitsRead;
+    bitsLeftToRead -= bitsToReadFromCurrentByte;
+  }
+
+  return result;
+}
+
 const debugImage = (imageBuffer) => {
   console.log("Debug image information:");
 
-  const colorCount = 8; // imageBuffer.readUInt8(6);
+  const colorCount = imageBuffer.readUInt8(6);
+  const bitsPerPixel = Math.ceil(Math.log2(colorCount));
   console.log("colorCount", colorCount);
+  console.log("bitsPerPixel", bitsPerPixel);
 
   let palette = [];
 
@@ -22,40 +45,15 @@ const debugImage = (imageBuffer) => {
 
   const pixelsStart = 7 + colorCount * 3;
 
-  for (let frame = 0; imageBuffer.length >= pixelsStart + (frame + 1) * 16 * 16 * 3 / 8; frame++) {
+  for (let frame = 0; imageBuffer.length >= pixelsStart + (frame + 1) * 16 * 16 * bitsPerPixel / 8; frame++) {
     for (let y = 0; y < 16; y++) {
       for (let x = 0; x < 16; x++) {
         const index = y * 16 + x;
-        const startingBit = pixelsStart * 8 + frame * (16 * 16 * 3 + 56) + index * 3;
-        const startingByteIndex = Math.floor(startingBit / 8);
-        const firstByte = imageBuffer.readUInt8(startingByteIndex);
+        const startingBit = pixelsStart * 8 + frame * (16 * 16 * bitsPerPixel + 56) + index * bitsPerPixel;
+        const color = readBitsFromBuffer(imageBuffer, startingBit, bitsPerPixel);
 
-        let color = 0;
-        if (startingBit % 8 == 0) {
-          color = firstByte & 0x7;
-        }
-        else if (startingBit % 8 == 1) {
-          color = (firstByte & (0x7 << 1)) >> 1;
-        }
-        else if (startingBit % 8 == 2) {
-          color = (firstByte & (0x7 << 2)) >> 2;
-        }
-        else if (startingBit % 8 == 3) {
-          color = (firstByte & (0x7 << 3)) >> 3;
-        }
-        else if (startingBit % 8 == 4) {
-          color = (firstByte & (0x7 << 4)) >> 4;
-        }
-        else if (startingBit % 8 == 5) {
-          color = (firstByte & (0x7 << 5)) >> 5;
-        }
-        else if (startingBit % 8 == 6) {
-          const secondByte = imageBuffer.readUInt8(startingByteIndex + 1);
-          color = ((firstByte & (0x3 << 6)) >> 6) + ((secondByte & 0x1) << 2);
-        }
-        else if (startingBit % 8 == 7) {
-          const secondByte = imageBuffer.readUInt8(startingByteIndex + 1);
-          color = ((firstByte & (0x1 << 7)) >> 7) + ((secondByte & 0x3) << 1);
+        if (color >= palette.length) {
+          console.log("ERROR", color);
         }
         process.stdout.write(fullcolor("██", palette[color]));
       }
@@ -69,4 +67,4 @@ const witch = "aa7f007f0000080000009b9b9b36055e926dc4e0c3c38f00ffcc8989a13d3d400
 debugImage(Buffer.from(witch, "hex"));
 
 const image = "aaab00f401000cffffffcfe8feffa1d3e57db4ffe2f0ffc24c000000ffb0db8bbe74926319ce994762994a00101111111111110021221123121111112122112322111111212222232211001111222432230100111141452222010011112224222212001111220000201211111102060006121111140206050612114145210000701111118411227007191111110800009091111111110000a0a911888bbb0008909abbbbb888888bbbb888aa8700f40101000010111111111111002022112312111100212211232211111121222223221111111122243223110011114145222201001111222422220200111122000020120011140206000612114145020605061211118421000070191111110822709791111111110000a0a9111111110000909a11888bbb0008b0bbbbbbb888888bbbb888";
-// debugImage(Buffer.from(image, "hex"));
+debugImage(Buffer.from(image, "hex"));
