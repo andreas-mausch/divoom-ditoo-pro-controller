@@ -80,5 +80,4 @@ const debugImage = (imageBuffer) => {
   }
 }
 
-debugImage(readFileSync("../images/witch.divoom16"));
-debugImage(readFileSync("../images/bunny.divoom16"));
+debugImage(readFileSync(process.argv[2]));

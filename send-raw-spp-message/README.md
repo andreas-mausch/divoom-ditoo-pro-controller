@@ -11,3 +11,9 @@ npm start
 ```
 
 Note: This script currently only works for 16x16 pixel images which have their full palette defined in the first frame.
+
+# Show debug information about image
+
+```bash
+npm run debug-image ../images/bunny.divoom16
+```
