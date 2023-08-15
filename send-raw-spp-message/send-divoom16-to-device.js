@@ -1,4 +1,5 @@
 import { BluetoothSerialPort } from "bluetooth-serial-port";
+import { sprintf } from "sprintf-js";
 
 const checksum = (buffer) => {
   let sum = 0;
@@ -18,6 +19,27 @@ const createNetworkPacket = (command, payload) => {
   buffer.writeUInt16LE(checksum(buffer), buffer.length - 3);
   buffer.writeUInt8(2, buffer.length - 1);
   return buffer;
+}
+
+const createNetworkPacketsFromImage = image => {
+  const SPP_APP_NEW_GIF_CMD2020 = 139;
+  const packets = [];
+  packets.push(createNetworkPacket(SPP_APP_NEW_GIF_CMD2020, Buffer.from("00b4010000", "hex")));
+
+  let bytesLeft = image.length;
+  while (bytesLeft > 0) {
+    const size = Math.min(bytesLeft, 256);
+    const buffer = Buffer.alloc(7 + size);
+    buffer.writeUInt8(1, 0);
+    buffer.writeUint16LE(image.length, 1);
+    buffer.writeUint16LE(0, 3);
+    buffer.writeUint16LE(packets.length - 1, 5);
+    image.copy(buffer, 7, image.length - bytesLeft, image.length - bytesLeft + size);
+    packets.push(createNetworkPacket(SPP_APP_NEW_GIF_CMD2020, buffer));
+    bytesLeft -= size;
+  }
+
+  return packets;
 }
 
 const findSerialPortChannelAsync = (port, address) =>
@@ -41,7 +63,7 @@ const writeAsync = (port, buffer) =>
     });
   });
 
-const send = async (macAddress) => {
+const send = async (macAddress, image) => {
   const port = new BluetoothSerialPort();
 
   const channel = await findSerialPortChannelAsync(port, macAddress);
@@ -50,14 +72,12 @@ const send = async (macAddress) => {
   await connectAsync(port, macAddress, channel);
   console.log("connected");
 
-  await writeAsync(port, createNetworkPacket(139, Buffer.from("00b4010000", "hex")));
-  console.log("Sent command 1");
+  const packets = createNetworkPacketsFromImage(image);
 
-  await writeAsync(port, createNetworkPacket(139, Buffer.from("01b40100000000aa7f007f0000080000009b9b9b36055e926dc4e0c3c38f00ffcc8989a13d3d400200929400000048d22600012049daa600002449db2600902449db240080364e9a20004844729280040054b29300000044929c24000920499a120000206d920000002469136003c07f69d36f1b40024892001b0000401000c0009000009000aa67007f000100009000920424000048d22600482049da2624002449db2600902449db240080364e9a20004044729212200054b29300000044929c24004022499a800400206d920000002469136003c07f69d36f1b00904892001b0000401000c0000024000024aa67007f000100090024920400000048d22600092249daa60000", "hex")));
-  console.log("Sent command 2");
-
-  await writeAsync(port, createNetworkPacket(139, Buffer.from("01b401000001002449db2600902449db240080364e9a20000044729290000054b29300000044929c24000120499a002400206d920000002469136003c07f69d36f1b01004892003b0000401000c0090000090000aa67007f000100400200929400000048d22600402249da2624002449db2600902449db240080364e9a20000144729200240054b29300000044929c24000920499a800400206d920000002469136003c07f69d36f1b09004892001b0000401000c0400200400200", "hex")));
-  console.log("Sent command 3");
+  for (const [index, packet] of packets.entries()) {
+    await writeAsync(port, packet);
+    console.log(sprintf("Sent packet %d/%d (%d bytes)", index + 1, packets.length, packet.length));
+  }
 
   port.close();
 };

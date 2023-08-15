@@ -1,9 +1,10 @@
 import "dotenv/config";
-import { BluetoothSerialPort } from "bluetooth-serial-port";
+import { readFileSync } from "fs";
 import { send } from "./send-divoom16-to-device.js";
 
 try {
-  await send(process.env.MAC_ADDRESS);
+  const image = readFileSync(process.argv[2]);
+  await send(process.env.MAC_ADDRESS, image);
 } catch (err) {
   console.error("Could not send:", err);
 }
