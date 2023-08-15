@@ -17,3 +17,9 @@ Note: This script currently only works for 16x16 pixel images which have their f
 ```bash
 npm run debug-image ../images/bunny.divoom16
 ```
+
+# Convert divoom16 image to .gif
+
+```bash
+npm run convert-divoom16-to-gif ../images/bunny.divoom16 ./output.gif
+```

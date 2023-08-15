@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "debug-image": "node debug-image.js"
+    "debug-image": "node debug-image.js",
+    "convert-divoom16-to-gif": "node convert-divoom16-to-gif.js"
   },
   "author": "",
   "license": "MIT",
@@ -14,6 +15,7 @@
     "bluetooth-serial-port": "^3.0.2",
     "dotenv": "^16.3.1",
     "fullcolor": "^0.1.1",
+    "gifwrap": "^0.10.1",
     "sprintf-js": "^1.1.2"
   }
 }
