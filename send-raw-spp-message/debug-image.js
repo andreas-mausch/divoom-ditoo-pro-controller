@@ -17,13 +17,14 @@ const debugImage = buffer => {
     console.log(sprintf("Color [%03d]: %s %s", index, hexString, fullcolor("████", hexString)));
   })
 
-  image.frames.forEach(frame => {
+  image.frames.forEach((frame, index) => {
+    console.log(sprintf("Frame %d: %dms", index, frame.timeInMilliseconds));
     for (let y = 0; y < image.height; y++) {
       for (let x = 0; x < image.width; x++) {
         const index = y * image.width + x;
-        const red = frame.readUInt8(index * 3 + 0);
-        const green = frame.readUInt8(index * 3 + 1);
-        const blue = frame.readUInt8(index * 3 + 2);
+        const red = frame.buffer.readUInt8(index * 3 + 0);
+        const green = frame.buffer.readUInt8(index * 3 + 1);
+        const blue = frame.buffer.readUInt8(index * 3 + 2);
         const hexString = sprintf("#%02x%02x%02x", red, green, blue);
         process.stdout.write(fullcolor("██", hexString));
       }

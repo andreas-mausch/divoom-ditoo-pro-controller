@@ -1,3 +1,5 @@
+import { sprintf } from "sprintf-js";
+
 const BITS_PER_BYTE = 8;
 const FRAME_HEADER_LENGTH = 7;
 
@@ -42,20 +44,22 @@ const loadImage = (imageBuffer) => {
     palette.push({ red, green, blue });
   }
 
-  const pixelsStart = FRAME_HEADER_LENGTH + firstFrameHeader.colorCount * 3;
   const imageWidth = 16;
   const imageHeight = 16;
 
   const frames = [];
-  for (let frame = 0; imageBuffer.length >= pixelsStart + (frame + 1) * imageWidth * imageHeight * bitsPerPixel / BITS_PER_BYTE; frame++) {
+  let frameOffset = 0;
+
+  for (let frame = 0; imageBuffer.length >= frameOffset + imageWidth * imageHeight * bitsPerPixel / BITS_PER_BYTE; frame++) {
+    const header = frameHeader(imageBuffer, frameOffset);
+    const pixelsOffset = frameOffset + FRAME_HEADER_LENGTH + header.colorCount * 3;
+
     const frameBuffer = Buffer.alloc(imageWidth * imageHeight * 3);
-    const frameStart = pixelsStart + frame * imageWidth * imageHeight * bitsPerPixel / BITS_PER_BYTE;
-    const framePixelStart = frameStart + frame * FRAME_HEADER_LENGTH;
 
     for (let y = 0; y < imageHeight; y++) {
       for (let x = 0; x < imageWidth; x++) {
         const index = y * imageWidth + x;
-        const startingBit = framePixelStart * BITS_PER_BYTE + index * bitsPerPixel;
+        const startingBit = pixelsOffset * BITS_PER_BYTE + index * bitsPerPixel;
         const color = readBitsFromBuffer(imageBuffer, startingBit, bitsPerPixel);
         frameBuffer.writeUInt8(palette[color].red, index * 3 + 0);
         frameBuffer.writeUInt8(palette[color].green, index * 3 + 1);
@@ -63,7 +67,12 @@ const loadImage = (imageBuffer) => {
       }
     }
 
-    frames.push(frameBuffer);
+    frames.push({
+      buffer: frameBuffer,
+      timeInMilliseconds: header.timeInMilliseconds
+    });
+
+    frameOffset = pixelsOffset + imageWidth * imageHeight * bitsPerPixel / BITS_PER_BYTE;
   }
 
   return {
