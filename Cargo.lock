@@ -384,6 +384,7 @@ dependencies = [
  "btleplug",
  "clap",
  "env_logger",
+ "futures",
  "log",
  "time",
  "tokio",
