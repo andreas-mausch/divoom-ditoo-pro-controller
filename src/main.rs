@@ -1,12 +1,14 @@
 use std::error::Error;
 use std::time::Duration;
 
-use btleplug::api::{Central, Manager as _, Peripheral, ScanFilter};
+use btleplug::api::{BDAddr, Central, Manager as _, Peripheral, ScanFilter};
 use btleplug::platform::Manager;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
 use log::info;
 use tokio::time;
+
+use Command::{ListDevices, SendCommand};
 
 /// CLI tool to send bluetooth commands to a Divoom Ditoo Pro
 #[derive(Parser, Debug)]
@@ -19,7 +21,12 @@ pub struct Args {
 #[derive(Subcommand, Debug)]
 enum Command {
     /// Lists all available bluetooth devices and tries to find a Divoom
-    ListDevices
+    ListDevices,
+
+    /// Connects to a Divoom via it's MAC address and sends a command
+    SendCommand {
+        mac_address: BDAddr
+    },
 }
 
 async fn list_devices() -> Result<(), Box<dyn Error>> {
@@ -42,6 +49,10 @@ async fn list_devices() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+async fn send_command(mac_address: BDAddr) -> Result<(), Box<dyn Error>> {
+    info!("Connecting to device {:?}", mac_address);
+    Ok(())
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -50,7 +61,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
 
     match args.command {
-        Command::ListDevices => list_devices().await?
+        ListDevices => list_devices().await?,
+        SendCommand{mac_address} => send_command(mac_address).await?
     }
 
     Ok(())
