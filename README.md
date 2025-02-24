@@ -6,6 +6,16 @@ like changing the image.
 The original app from the vendor is proprietary.
 The protocol however is basic Bluetooth, which can be reverse-engineered.
 
+# Requirements
+
+- Rust
+- cargo
+- cargo-edit
+- cargo-outdated
+- clippy
+
+I have compiled this repo with Rust 1.82.0.
+
 # Blog post
 
 Bluetooth Speaker with 16x16 Display (Divoom Ditoo Pro):
