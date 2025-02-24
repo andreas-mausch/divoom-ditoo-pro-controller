@@ -47,6 +47,11 @@ Replace the MAC address by the one from the command above.
 Note: This will not actually send anything to the device, it will just try to connect.
 Development is still in progress here.
 
+# Bluetooth adapter
+
+Please note the first available Bluetooth adapter is taken automatically.
+There is currently no way to configure another one.
+
 # Update dependencies
 
 `cargo update` only updates dependencies inside `Cargo.lock`.
