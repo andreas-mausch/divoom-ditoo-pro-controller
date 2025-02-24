@@ -32,11 +32,11 @@ enum Command {
 }
 
 async fn list_devices() -> Result<(), Box<dyn Error>> {
-    let manager = Manager::new().await.unwrap();
+    let manager = Manager::new().await?;
 
     // get the first bluetooth adapter
     let adapters = manager.adapters().await?;
-    let central = adapters.into_iter().nth(0).unwrap();
+    let central = adapters.into_iter().nth(0).ok_or("No bluetooth adapter found")?;
 
     // start scanning for devices
     central.start_scan(ScanFilter::default()).await?;
@@ -44,8 +44,8 @@ async fn list_devices() -> Result<(), Box<dyn Error>> {
     // notify you of new devices, for an example of that see examples/event_driven_discovery.rs
     time::sleep(Duration::from_secs(2)).await;
 
-    for peripheral in central.peripherals().await.unwrap() {
-        let properties = peripheral.properties().await.unwrap().unwrap();
+    for peripheral in central.peripherals().await? {
+        let properties = peripheral.properties().await?.ok_or("Could not get properties for bluetooth device")?;
         info!("Found bluetooth device: {:?} {:?}", peripheral.address(), properties.local_name);
     }
 
