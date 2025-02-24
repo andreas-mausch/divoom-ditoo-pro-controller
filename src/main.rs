@@ -6,9 +6,7 @@ use std::time::Duration;
 use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
-use futures::stream::StreamExt;
 use log::info;
-use tokio::time;
 
 use Command::{ListDevices, SendCommand};
 
@@ -70,7 +68,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ListDevices => list_devices().await?,
         SendCommand { mac_address } => {
             send_command(
-                BtAddr::from_str(&mac_address).map_err(|e| format!("Invalid MAC address: '{}'", mac_address))?,
+                BtAddr::from_str(&mac_address).map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
             )
             .await?
         }
