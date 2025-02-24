@@ -27,7 +27,25 @@ so please see this project as an experiment.
 
 # How to run
 
-TODO
+```shell-session
+$ cargo run list-devices
+// ...
+[2025-02-24T16:00:00Z INFO  divoom_ditoo_pro_controller] Found bluetooth device: 11:22:33:44:55:66 Some("DitooPro-Light")
+// ...
+```
+
+Look for a line containing `DitooPro-Light` or `DitooPro-Audio` and remember the MAC address.
+
+Then, run the second command:
+
+```bash
+cargo run send-command 11:22:33:44:55:66
+```
+
+Replace the MAC address by the one from the command above.
+
+Note: This will not actually send anything to the device, it will just try to connect.
+Development is still in progress here.
 
 # Update dependencies
 
