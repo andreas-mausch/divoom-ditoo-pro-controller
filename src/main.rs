@@ -26,6 +26,8 @@ enum Command {
     ListDevices,
 
     /// Connects to a Divoom via it's MAC address and sends a command
+    // BtAddr uses FromStr -> Err<()>, which doesn't work with clap:
+    // https://github.com/clap-rs/clap/issues/5360
     SendCommand { mac_address: String },
 }
 
