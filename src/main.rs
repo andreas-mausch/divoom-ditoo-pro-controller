@@ -49,7 +49,7 @@ async fn send_command(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
 
     info!("Sending message..");
     let message = hex::decode("010d00430000142e000200000028bc0002")?;
-    let num_bytes_written = socket.write(&message).unwrap();
+    let num_bytes_written = socket.write(&message)?;
     info!(
         "Wrote {}/{} bytes ({}%)",
         num_bytes_written,
