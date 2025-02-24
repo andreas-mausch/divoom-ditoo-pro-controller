@@ -55,9 +55,9 @@ async fn list_devices() -> Result<(), Box<dyn Error>> {
 async fn send_command(mac_address: BDAddr) -> Result<(), Box<dyn Error>> {
     info!("Connecting to device {:?}", mac_address);
 
-    let manager = Manager::new().await.unwrap();
+    let manager = Manager::new().await?;
     let adapters = manager.adapters().await?;
-    let adapter = adapters.first().unwrap();
+    let adapter = adapters.first().ok_or("No bluetooth adapter found")?;
 
     let mut events = adapter.events().await?;
     adapter.start_scan(ScanFilter::default()).await?;
