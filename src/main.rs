@@ -36,15 +36,15 @@ async fn list_devices() -> Result<(), Box<dyn Error>> {
 
     // get the first bluetooth adapter
     let adapters = manager.adapters().await?;
-    let central = adapters.into_iter().nth(0).ok_or("No bluetooth adapter found")?;
+    let adapter = adapters.first().ok_or("No bluetooth adapter found")?;
 
     // start scanning for devices
-    central.start_scan(ScanFilter::default()).await?;
+    adapter.start_scan(ScanFilter::default()).await?;
     // instead of waiting, you can use central.events() to get a stream which will
     // notify you of new devices, for an example of that see examples/event_driven_discovery.rs
     time::sleep(Duration::from_secs(2)).await;
 
-    for peripheral in central.peripherals().await? {
+    for peripheral in adapter.peripherals().await? {
         let properties = peripheral.properties().await?.ok_or("Could not get properties for bluetooth device")?;
         info!("Found bluetooth device: {:?} {:?}", peripheral.address(), properties.local_name);
     }
