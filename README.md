@@ -76,3 +76,12 @@ To update/upgrade dependencies, use this:
 cargo upgrade --incompatible allow
 cargo update
 ```
+
+# Format code, fix warnings
+
+```bash
+cargo fmt
+cargo check
+cargo fix
+cargo clippy --all-targets --all-features -- --deny warnings
+```
