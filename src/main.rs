@@ -69,7 +69,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match args.command {
         ListDevices => list_devices().await?,
         SendCommand { mac_address } => {
-            send_command(BtAddr::from_str(&mac_address).unwrap()).await?
+            send_command(
+                BtAddr::from_str(&mac_address).map_err(|e| format!("Invalid MAC address: '{}'", mac_address))?,
+            )
+            .await?
         }
     }
 
