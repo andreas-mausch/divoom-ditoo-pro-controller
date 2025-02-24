@@ -28,3 +28,23 @@ so please see this project as an experiment.
 # How to run
 
 TODO
+
+# Update dependencies
+
+`cargo update` only updates dependencies inside `Cargo.lock`.
+To update your dependencies in the `Cargo.toml`, use
+[cargo-edit](https://archlinux.org/packages/extra/x86_64/cargo-edit/) and
+[cargo-outdated](https://archlinux.org/packages/extra/x86_64/cargo-outdated/).
+
+List outdated dependencies:
+
+```bash
+cargo outdated
+```
+
+To update/upgrade dependencies, use this:
+
+```bash
+cargo upgrade --incompatible allow
+cargo update
+```
