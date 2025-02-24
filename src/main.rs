@@ -1,9 +1,9 @@
 use std::error::Error;
+use std::io::Write;
+use std::str::FromStr;
 use std::time::Duration;
 
-use btleplug::api::{BDAddr, Central, CentralEvent, Manager as _, Peripheral, ScanFilter};
-use btleplug::platform::Manager;
-use CentralEvent::DeviceDiscovered;
+use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
 use futures::stream::StreamExt;
@@ -26,63 +26,34 @@ enum Command {
     ListDevices,
 
     /// Connects to a Divoom via it's MAC address and sends a command
-    SendCommand {
-        mac_address: BDAddr
-    },
+    SendCommand { mac_address: String },
 }
 
 async fn list_devices() -> Result<(), Box<dyn Error>> {
-    let manager = Manager::new().await?;
-
-    // get the first bluetooth adapter
-    let adapters = manager.adapters().await?;
-    let adapter = adapters.first().ok_or("No bluetooth adapter found")?;
-
-    // start scanning for devices
-    adapter.start_scan(ScanFilter::default()).await?;
-    // instead of waiting, you can use central.events() to get a stream which will
-    // notify you of new devices, for an example of that see examples/event_driven_discovery.rs
-    time::sleep(Duration::from_secs(2)).await;
-
-    for peripheral in adapter.peripherals().await? {
-        let properties = peripheral.properties().await?.ok_or("Could not get properties for bluetooth device")?;
-        info!("Found bluetooth device: {:?} {:?}", peripheral.address(), properties.local_name);
-    }
+    let duration = Duration::from_secs(20);
+    info!("Scanning bluetooth devices for {:?}", duration);
+    let devices = scan_devices(duration)?;
+    info!("Found bluetooth devices {:?}", devices);
 
     Ok(())
 }
 
-async fn send_command(mac_address: BDAddr) -> Result<(), Box<dyn Error>> {
-    info!("Connecting to device {:?}", mac_address);
+async fn send_command(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
+    info!("Connecting to device with MAC address {:?}", mac_address);
 
-    let manager = Manager::new().await?;
-    let adapters = manager.adapters().await?;
-    let adapter = adapters.first().ok_or("No bluetooth adapter found")?;
+    let mut socket = BtSocket::new(BtProtocol::RFCOMM)?;
+    socket.connect(mac_address)?;
+    info!("Connection successful, socket over RFCOMM/SPP acquired");
 
-    let mut events = adapter.events().await?;
-    adapter.start_scan(ScanFilter::default()).await?;
-
-    let peripheral = loop {
-        match events.next().await {
-            Some(DeviceDiscovered(id)) => {
-                let discovered_mac_address = adapter.peripheral(&id).await?.address();
-                info!("DeviceDiscovered: {}", discovered_mac_address);
-
-                if discovered_mac_address == mac_address {
-                    break Some(adapter.peripheral(&id).await?);
-                }
-            }
-            Some(_) => {}
-            None => break None
-        }
-    }.ok_or("Device not found")?;
-
-    peripheral.connect().await?;
-    peripheral.discover_services().await?;
-
-    info!("Connected to device with MAC address {}", mac_address);
-
-    peripheral.disconnect().await?;
+    info!("Sending message..");
+    let message = hex::decode("010d00430000142e000200000028bc0002")?;
+    let num_bytes_written = socket.write(&message).unwrap();
+    info!(
+        "Wrote {}/{} bytes ({}%)",
+        num_bytes_written,
+        message.len(),
+        num_bytes_written * 100 / message.len()
+    );
 
     Ok(())
 }
@@ -95,7 +66,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     match args.command {
         ListDevices => list_devices().await?,
-        SendCommand { mac_address } => send_command(mac_address).await?
+        SendCommand { mac_address } => {
+            send_command(BtAddr::from_str(&mac_address).unwrap()).await?
+        }
     }
 
     Ok(())

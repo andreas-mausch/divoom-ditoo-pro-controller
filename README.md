@@ -29,8 +29,9 @@ so please see this project as an experiment.
 
 ```shell-session
 $ cargo run list-devices
+[2025-02-24T17:00:00Z INFO  divoom_ditoo_pro_controller] Scanning bluetooth devices for 20s
 // ...
-[2025-02-24T16:00:00Z INFO  divoom_ditoo_pro_controller] Found bluetooth device: 11:22:33:44:55:66 Some("DitooPro-Light")
+[2025-02-24T17:01:01Z INFO  divoom_ditoo_pro_controller] Found bluetooth devices [BtDevice { name: "DitooPro-Audio", addr: 11:22:33:44:55:66 }]
 // ...
 ```
 
@@ -38,13 +39,17 @@ Look for a line containing `DitooPro-Light` or `DitooPro-Audio` and remember the
 
 Then, run the second command:
 
-```bash
-cargo run send-command 11:22:33:44:55:66
+```shell-session
+$ cargo run send-command 11:22:33:44:55:66
+[2025-02-24T17:20:00Z INFO  divoom_ditoo_pro_controller] Connecting to device with MAC address 11:22:33:44:55:66
+[2025-02-24T17:20:01Z INFO  divoom_ditoo_pro_controller] Connection successful, socket over RFCOMM/SPP acquired
+[2025-02-24T17:20:02Z INFO  divoom_ditoo_pro_controller] Sending message..
+[2025-02-24T17:20:03Z INFO  divoom_ditoo_pro_controller] Wrote 17/17 bytes (100%)
 ```
 
 Replace the MAC address by the one from the command above.
 
-Note: This will not actually send anything to the device, it will just try to connect.
+Note: This will always send a message to disable the alarm, custom messages are not implemented yet.
 Development is still in progress here.
 
 # Bluetooth adapter
