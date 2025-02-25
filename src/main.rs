@@ -134,6 +134,10 @@ fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<DynamicImage, Box<
     let bits_per_pixel: u8 = f32::log2(palette.len() as f32).ceil() as u8;
     info!("Color count: {}; Bits per pixel: {}", palette.len(), bits_per_pixel);
 
+    let width = 16;
+    let height = 16;
+    info!("Pixel data is: {} bits = {} bytes", width * height * bits_per_pixel as u64, width * height * bits_per_pixel as u64 / 8);
+
     Ok(DynamicImage::ImageRgb8(image))
 }
 
