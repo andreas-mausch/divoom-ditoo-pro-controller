@@ -83,6 +83,7 @@ async fn send_command(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct FrameHeader {
     magic_number: u8,
     length: u16,
