@@ -95,3 +95,14 @@ cargo check
 cargo fix
 cargo clippy --all-targets --all-features -- --deny warnings
 ```
+
+# Protocol
+
+- Protocol introduction:
+  <https://docin.divoom-gz.com/web/#/5/146>
+- App new send gif cmd (0x8b):
+  <https://docin.divoom-gz.com/web/#/5/293>
+- Example images from the Pixoo64 to decode:
+  <https://github.com/Grayda/pixoo64_example_images>
+- node-divoom-timebox-evo: PROTOCOL
+  <https://github.com/RomRider/node-divoom-timebox-evo/blob/0.3.0/PROTOCOL.md>
