@@ -50,7 +50,7 @@ Look for a line containing `DitooPro-Light` or `DitooPro-Audio` and remember the
 Then, run the second command:
 
 ```shell-session
-$ cargo run send-command 11:22:33:44:55:66
+$ cargo run send 11:22:33:44:55:66 alert off
 [2025-02-24T17:20:00Z INFO  divoom_ditoo_pro_controller] Connecting to device with MAC address 11:22:33:44:55:66
 [2025-02-24T17:20:01Z INFO  divoom_ditoo_pro_controller] Connection successful, socket over RFCOMM/SPP acquired
 [2025-02-24T17:20:02Z INFO  divoom_ditoo_pro_controller] Sending message..
@@ -64,8 +64,8 @@ Development is still in progress here.
 
 # Bluetooth adapter
 
-Please note the first available Bluetooth adapter is taken automatically.
-There is currently no way to configure another one.
+Please note the Bluetooth adapter is chosen automatically.
+There is currently no way to configure it.
 
 # Update dependencies
 

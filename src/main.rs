@@ -8,7 +8,8 @@ use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
 use log::info;
 
-use Command::{ListDevices, SendCommand};
+use Command::{ListDevices, Send};
+use SendCommand::Alert;
 
 /// CLI tool to send bluetooth commands to a Divoom Ditoo Pro
 #[derive(Parser, Debug)]
@@ -26,7 +27,19 @@ enum Command {
     /// Connects to a Divoom via it's MAC address and sends a command
     // BtAddr uses FromStr -> Err<()>, which doesn't work with clap:
     // https://github.com/clap-rs/clap/issues/5360
-    SendCommand { mac_address: String },
+    Send {
+        mac_address: String,
+        #[command(subcommand)]
+        send: SendCommand,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum SendCommand {
+    Alert {
+        #[arg(required = true, number_of_values = 1, value_parser = clap::builder::BoolishValueParser::new())]
+        enable: bool,
+    },
 }
 
 async fn list_devices() -> Result<(), Box<dyn Error>> {
@@ -66,12 +79,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     match args.command {
         ListDevices => list_devices().await?,
-        SendCommand { mac_address } => {
-            send_command(
-                BtAddr::from_str(&mac_address).map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
-            )
-            .await?
-        }
+        Send { mac_address, send } => match send {
+            Alert { enable } => {
+                match enable {
+                    true => info!("Enabling alert.."),
+                    false => info!("Disabling alert.."),
+                }
+                send_command(
+                    BtAddr::from_str(&mac_address)
+                        .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
+                )
+                .await?
+            }
+        },
     }
 
     Ok(())
