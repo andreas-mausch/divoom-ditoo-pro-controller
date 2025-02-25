@@ -136,7 +136,8 @@ fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<DynamicImage, Box<
 
     let width = 16;
     let height = 16;
-    info!("Pixel data is: {} bits = {} bytes", width * height * bits_per_pixel as u64, width * height * bits_per_pixel as u64 / 8);
+    let pixel_data_in_bits = width * height * bits_per_pixel as u64;
+    info!("Pixel data is: {} bits = {} bytes", pixel_data_in_bits, pixel_data_in_bits.div_ceil(8));
 
     Ok(DynamicImage::ImageRgb8(image))
 }
