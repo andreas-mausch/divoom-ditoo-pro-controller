@@ -6,13 +6,14 @@ use std::io::Write;
 use std::str::FromStr;
 use std::time::Duration;
 
+use bitstream_io::{BitReader, BitRead};
 use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
 use byteorder::LittleEndian;
 use byteorder::ReadBytesExt;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
 use image::{DynamicImage, Rgb, RgbImage};
-use log::info;
+use log::{debug, info};
 
 use Command::{ListDevices, Send, DebugImage};
 use SendCommand::Alert;
@@ -111,7 +112,7 @@ impl FrameHeader {
 }
 
 fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<DynamicImage, Box<dyn Error>> {
-    let image = RgbImage::new(16, 16);
+    let mut image = RgbImage::new(16, 16);
 
     let frame_header = FrameHeader::from_reader(reader)?;
     info!("Image frame header: {:?}", frame_header);
@@ -122,7 +123,7 @@ fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<DynamicImage, Box<
 
     let mut palette = Vec::<Rgb<u8>>::new();
 
-    for _ in 1..frame_header.color_count {
+    for _ in 0..frame_header.color_count {
         let red = reader.read_u8()?;
         let green = reader.read_u8()?;
         let blue = reader.read_u8()?;
@@ -134,10 +135,23 @@ fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<DynamicImage, Box<
     let bits_per_pixel: u8 = f32::log2(palette.len() as f32).ceil() as u8;
     info!("Color count: {}; Bits per pixel: {}", palette.len(), bits_per_pixel);
 
-    let width = 16;
-    let height = 16;
-    let pixel_data_in_bits = width * height * bits_per_pixel as u64;
-    info!("Pixel data is: {} bits = {} bytes", pixel_data_in_bits, pixel_data_in_bits.div_ceil(8));
+    let width = 16u32;
+    let height = 16u32;
+    let pixel_data_in_bits = width * height * bits_per_pixel as u32;
+    let pixel_data_in_bytes = pixel_data_in_bits.div_ceil(8);
+    info!("Pixel data is: {} bits = {} bytes", pixel_data_in_bits, pixel_data_in_bytes);
+
+    let mut pixel_data_reader = BitReader::endian(reader.take(pixel_data_in_bytes.into()), bitstream_io::LittleEndian);
+
+    for y in 0..height {
+        for x in 0..width {
+            let palette_index = pixel_data_reader.read::<u8>(bits_per_pixel.into())?;
+            let palette_entry = palette[palette_index as usize];
+            debug!("Palette index {}x{}: {} ({:?})", x, y, palette_index, palette_entry);
+
+            image.put_pixel(x, y, palette_entry);
+        }
+    }
 
     Ok(DynamicImage::ImageRgb8(image))
 }

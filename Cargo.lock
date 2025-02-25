@@ -365,6 +365,7 @@ dependencies = [
 name = "divoom-ditoo-pro-controller"
 version = "0.1.0"
 dependencies = [
+ "bitstream-io",
  "bluetooth-serial-port",
  "byteorder",
  "clap",
