@@ -17,4 +17,5 @@ hex = "0.4.3"
 
 [lints.clippy]
 panic = "warn"
+expect_used = "warn"
 unwrap_used = "warn"
