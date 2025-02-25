@@ -11,7 +11,7 @@ use byteorder::LittleEndian;
 use byteorder::ReadBytesExt;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
-use image::{DynamicImage, RgbImage};
+use image::{DynamicImage, Rgb, RgbImage};
 use log::info;
 
 use Command::{ListDevices, Send, DebugImage};
@@ -118,6 +118,17 @@ fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<DynamicImage, Box<
 
     if frame_header.magic_number != 0xAA {
         return Err(format!("Magic number does not match {:#04X}: {:#04X}", 0xAA, frame_header.magic_number).into())
+    }
+
+    let mut palette = Vec::<Rgb<u8>>::new();
+
+    for _ in 1..frame_header.color_count {
+        let red = reader.read_u8()?;
+        let green = reader.read_u8()?;
+        let blue = reader.read_u8()?;
+
+        info!("Adding color to palette: #{:02X}{:02X}{:02X}", red, green, blue);
+        palette.push(Rgb([red, green, blue]));
     }
 
     Ok(DynamicImage::ImageRgb8(image))
