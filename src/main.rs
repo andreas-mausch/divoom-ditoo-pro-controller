@@ -1,22 +1,19 @@
 use std::error::Error;
-use std::fs::File;
-use std::io::BufReader;
-use std::io::Read;
 use std::io::Write;
 use std::str::FromStr;
 use std::time::Duration;
 
-use bitstream_io::{BitReader, BitRead};
 use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
-use byteorder::LittleEndian;
-use byteorder::ReadBytesExt;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
-use image::{DynamicImage, Rgb, RgbImage};
-use log::{debug, info};
+use log::info;
 
 use Command::{ListDevices, Send, DebugImage};
 use SendCommand::Alert;
+
+pub mod divoom_file_format;
+
+use crate::divoom_file_format::read_divoom_16x16_image_from_file;
 
 /// CLI tool to send bluetooth commands to a Divoom Ditoo Pro
 #[derive(Parser, Debug)]
@@ -81,85 +78,6 @@ async fn send_command(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
     );
 
     Ok(())
-}
-
-#[derive(Debug)]
-#[allow(dead_code)]
-struct FrameHeader {
-    magic_number: u8,
-    length: u16,
-    time_in_milliseconds: u16,
-    reuse_palette: bool,
-    color_count: u8
-}
-
-impl FrameHeader {
-    fn from_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
-        let magic_number = reader.read_u8()?;
-        let length = reader.read_u16::<LittleEndian>()?;
-        let time_in_milliseconds = reader.read_u16::<LittleEndian>()?;
-        let reuse_palette = reader.read_u8()? != 0;
-        let color_count = reader.read_u8()?;
-
-        Ok(FrameHeader {
-            magic_number,
-            length,
-            time_in_milliseconds,
-            reuse_palette,
-            color_count,
-        })
-    }
-}
-
-fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<DynamicImage, Box<dyn Error>> {
-    let mut image = RgbImage::new(16, 16);
-
-    let frame_header = FrameHeader::from_reader(reader)?;
-    info!("Image frame header: {:?}", frame_header);
-
-    if frame_header.magic_number != 0xAA {
-        return Err(format!("Magic number does not match {:#04X}: {:#04X}", 0xAA, frame_header.magic_number).into())
-    }
-
-    let mut palette = Vec::<Rgb<u8>>::new();
-
-    for _ in 0..frame_header.color_count {
-        let red = reader.read_u8()?;
-        let green = reader.read_u8()?;
-        let blue = reader.read_u8()?;
-
-        info!("Adding color to palette: #{:02X}{:02X}{:02X}", red, green, blue);
-        palette.push(Rgb([red, green, blue]));
-    }
-
-    let bits_per_pixel: u8 = f32::log2(palette.len() as f32).ceil() as u8;
-    info!("Color count: {}; Bits per pixel: {}", palette.len(), bits_per_pixel);
-
-    let width = 16u32;
-    let height = 16u32;
-    let pixel_data_in_bits = width * height * bits_per_pixel as u32;
-    let pixel_data_in_bytes = pixel_data_in_bits.div_ceil(8);
-    info!("Pixel data is: {} bits = {} bytes", pixel_data_in_bits, pixel_data_in_bytes);
-
-    let mut pixel_data_reader = BitReader::endian(reader.take(pixel_data_in_bytes.into()), bitstream_io::LittleEndian);
-
-    for y in 0..height {
-        for x in 0..width {
-            let palette_index = pixel_data_reader.read::<u8>(bits_per_pixel.into())?;
-            let palette_entry = palette[palette_index as usize];
-            debug!("Palette index {}x{}: {} ({:?})", x, y, palette_index, palette_entry);
-
-            image.put_pixel(x, y, palette_entry);
-        }
-    }
-
-    Ok(DynamicImage::ImageRgb8(image))
-}
-
-fn read_divoom_16x16_image_from_file(filename: String) -> Result<DynamicImage, Box<dyn Error>> {
-    let file = File::open(filename)?;
-    let mut reader = BufReader::new(file);
-    read_divoom_16x16_image(&mut reader)
 }
 
 #[tokio::main]
