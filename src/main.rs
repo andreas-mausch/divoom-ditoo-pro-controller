@@ -1,15 +1,15 @@
 use std::error::Error;
-use std::io::Write;
 use std::str::FromStr;
-use std::time::Duration;
 
-use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
+use bluetooth_serial_port::BtAddr;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
 use log::info;
 
 use Command::{ListDevices, Send, DebugImage};
 use SendCommand::Alert;
+
+use divoom_ditoo_pro_controller::{list_devices, send_command};
 
 pub mod divoom_file_format;
 
@@ -49,35 +49,6 @@ enum SendCommand {
         #[arg(required = true, number_of_values = 1, value_parser = clap::builder::BoolishValueParser::new())]
         enable: bool,
     },
-}
-
-async fn list_devices() -> Result<(), Box<dyn Error>> {
-    let duration = Duration::from_secs(20);
-    info!("Scanning bluetooth devices for {:?}", duration);
-    let devices = scan_devices(duration)?;
-    info!("Found bluetooth devices {:?}", devices);
-
-    Ok(())
-}
-
-async fn send_command(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
-    info!("Connecting to device with MAC address {:?}", mac_address);
-
-    let mut socket = BtSocket::new(BtProtocol::RFCOMM)?;
-    socket.connect(mac_address)?;
-    info!("Connection successful, socket over RFCOMM/SPP acquired");
-
-    info!("Sending message..");
-    let message = hex::decode("010d00430000142e000200000028bc0002")?;
-    let num_bytes_written = socket.write(&message)?;
-    info!(
-        "Wrote {}/{} bytes ({}%)",
-        num_bytes_written,
-        message.len(),
-        num_bytes_written * 100 / message.len()
-    );
-
-    Ok(())
 }
 
 #[tokio::main]
