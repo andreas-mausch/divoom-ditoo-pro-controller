@@ -61,8 +61,11 @@ $ cargo run send 11:22:33:44:55:66 alarm off
 
 Replace the MAC address by the one from the command above.
 
-Note: This will always send a message to disable the alarm, custom messages are not implemented yet.
-Development is still in progress here.
+More examples:
+
+```bash
+cargo run send 11:22:33:44:55:66 animation ./images/witch.divoom16
+```
 
 # Bluetooth adapter
 
