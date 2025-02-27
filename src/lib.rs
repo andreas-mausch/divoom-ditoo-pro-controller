@@ -48,7 +48,7 @@ fn send(mac_address: BtAddr, packets: &[&[u8]]) -> Result<(), Box<dyn Error>> {
 }
 
 fn checksum(buffer: &[u8]) -> u16 {
-    return buffer.iter().fold(0u16, |acc, x| acc + *x as u16);
+    buffer.iter().fold(0u16, |acc, x| acc + *x as u16)
 }
 
 fn create_network_packet(command: u8, payload: &[u8]) -> Result<Vec<u8>, Box<dyn Error>> {
