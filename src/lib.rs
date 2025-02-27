@@ -31,7 +31,7 @@ pub async fn send_command(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
         mode: 0,
         trigger_mode: 0,
         fm: [0, 0],
-        volume: 100
+        volume: 100,
     };
     let packet = Packet::from(Command::Alarm, &alarm.serialize()?)?;
     send(mac_address, &[packet])
@@ -69,7 +69,10 @@ fn send(mac_address: BtAddr, packets: &[Packet]) -> Result<(), Box<dyn Error>> {
 
 fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Packet>, Box<dyn Error>> {
     let mut packets = Vec::<Packet>::new();
-    packets.push(Packet::from(Command::Animation, &hex::decode("00b4010000")?)?);
+    packets.push(Packet::from(
+        Command::Animation,
+        &hex::decode("00b4010000")?,
+    )?);
 
     let mut animation_packets = animation
         .chunks(256)
@@ -100,9 +103,6 @@ pub fn send_divoom_animation<R: Read>(
     reader.read_to_end(&mut animation)?;
 
     let packets = create_network_packets_from(&animation)?;
-    send(
-        mac_address,
-        &packets,
-    )?;
+    send(mac_address, &packets)?;
     Ok(())
 }

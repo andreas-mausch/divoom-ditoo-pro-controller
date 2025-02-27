@@ -12,7 +12,7 @@ pub struct Packet {
     pub command: Command,
     pub payload: Vec<u8>,
     pub checksum: u16,
-    pub end: u8
+    pub end: u8,
 }
 
 impl Packet {
@@ -23,7 +23,7 @@ impl Packet {
             command,
             payload: payload.to_vec(),
             checksum: Self::checksum(command, payload)?,
-            end: 2
+            end: 2,
         })
     }
 
