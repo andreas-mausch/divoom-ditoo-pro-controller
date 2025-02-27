@@ -4,11 +4,14 @@ use std::time::Duration;
 
 use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
 use byteorder::{LittleEndian, WriteBytesExt};
+use chrono::NaiveTime;
 use log::{debug, info};
 
 pub mod protocol;
 
 use protocol::Packet;
+use protocol::alarm::Alarm;
+use protocol::command::Command;
 
 pub async fn list_devices() -> Result<(), Box<dyn Error>> {
     let duration = Duration::from_secs(20);
@@ -20,7 +23,17 @@ pub async fn list_devices() -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn send_command(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
-    let packet = Packet::from(0x43, &hex::decode("0000142e000200000028")?)?;
+    let alarm = Alarm {
+        index: 0,
+        enable: false,
+        time: NaiveTime::from_hms_opt(13, 37, 0).ok_or("Invalid time")?,
+        repeat: 0,
+        mode: 0,
+        trigger_mode: 0,
+        fm: [0, 0],
+        volume: 100
+    };
+    let packet = Packet::from(Command::Alarm, &alarm.serialize()?)?;
     send(mac_address, &[packet])
 }
 
@@ -56,7 +69,7 @@ fn send(mac_address: BtAddr, packets: &[Packet]) -> Result<(), Box<dyn Error>> {
 
 fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Packet>, Box<dyn Error>> {
     let mut packets = Vec::<Packet>::new();
-    packets.push(Packet::from(139, &hex::decode("00b4010000")?)?);
+    packets.push(Packet::from(Command::Animation, &hex::decode("00b4010000")?)?);
 
     let mut animation_packets = animation
         .chunks(256)
@@ -71,7 +84,7 @@ fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Packet>, Box<dyn 
                 writer.write_u16::<LittleEndian>(index as u16)?;
                 writer.write_all(chunk)?;
             }
-            Packet::from(139, &payload)
+            Packet::from(Command::Animation, &payload)
         })
         .collect::<Result<Vec<_>, Box<dyn Error>>>()?;
     packets.append(&mut animation_packets);
