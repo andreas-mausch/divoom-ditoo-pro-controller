@@ -1,15 +1,15 @@
 use std::error::Error;
-use std::io::{BufWriter, Read, Write};
+use std::io::{Read, Write};
 use std::time::Duration;
 
 use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
-use byteorder::{LittleEndian, WriteBytesExt};
 use chrono::NaiveTime;
 use log::{debug, info};
 
 pub mod protocol;
 
 use crate::protocol::alarm::Alarm;
+use crate::protocol::animation::{Animation, ControlWord};
 use crate::protocol::command::Command;
 use crate::protocol::packet::Packet;
 
@@ -74,25 +74,26 @@ fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Packet>, Box<dyn 
   let mut packets = Vec::<Packet>::new();
   packets.push(Packet {
     command: Command::Animation,
-    payload: hex::decode("00b4010000")?
+    payload: Animation {
+      control_word: ControlWord::StartSeeding,
+      file_size: animation.len() as u32,
+      offset_id: 0,
+      image_part: Vec::new()
+    }.serialize()?
   });
 
   let mut animation_packets = animation
     .chunks(256)
     .enumerate()
     .map(|(index, chunk)| {
-      let payload_size = chunk.len() + 7;
-      let mut payload = Vec::<u8>::with_capacity(payload_size);
-      let mut writer = BufWriter::new(&mut payload);
-      writer.write_u8(1)?;
-      writer.write_u32::<LittleEndian>(animation.len() as u32)?;
-      writer.write_u16::<LittleEndian>(index as u16)?;
-      writer.write_all(chunk)?;
-      drop(writer);
-
       Ok(Packet {
         command: Command::Animation,
-        payload
+        payload: Animation {
+          control_word: ControlWord::SendingData,
+          file_size: animation.len() as u32,
+          offset_id: index as u16,
+          image_part: chunk.to_vec()
+        }.serialize()?
       })
     })
     .collect::<Result<Vec<_>, Box<dyn Error>>>()?;
