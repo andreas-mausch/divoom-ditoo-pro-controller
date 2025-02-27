@@ -80,13 +80,12 @@ fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Packet>, Box<dyn 
         .map(|(index, chunk)| {
             let payload_size = chunk.len() + 7;
             let mut payload = Vec::<u8>::with_capacity(payload_size);
-            {
-                let mut writer = BufWriter::new(&mut payload);
-                writer.write_u8(1)?;
-                writer.write_u32::<LittleEndian>(animation.len() as u32)?;
-                writer.write_u16::<LittleEndian>(index as u16)?;
-                writer.write_all(chunk)?;
-            }
+            let mut writer = BufWriter::new(&mut payload);
+            writer.write_u8(1)?;
+            writer.write_u32::<LittleEndian>(animation.len() as u32)?;
+            writer.write_u16::<LittleEndian>(index as u16)?;
+            writer.write_all(chunk)?;
+            drop(writer);
             Packet::from(Command::Animation, &payload)
         })
         .collect::<Result<Vec<_>, Box<dyn Error>>>()?;
