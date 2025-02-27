@@ -21,7 +21,7 @@ use crate::divoom_file_format::read_divoom_16x16_image_from_file;
 #[command(author, version, about, long_about = None)]
 pub struct Args {
     #[command(subcommand)]
-    command: Command,
+    command: Command
 }
 
 #[derive(Subcommand, Debug)]
@@ -35,22 +35,22 @@ enum Command {
     Send {
         mac_address: String,
         #[command(subcommand)]
-        send: SendCommand,
+        send: SendCommand
     },
 
     /// Show detailed information about an image in Divoom file format
-    DebugImage { filename: String },
+    DebugImage { filename: String }
 }
 
 #[derive(Subcommand, Debug)]
 enum SendCommand {
     Alarm {
         #[arg(required = true, number_of_values = 1, value_parser = clap::builder::BoolishValueParser::new())]
-        enable: bool,
+        enable: bool
     },
     Animation {
-        filename: String,
-    },
+        filename: String
+    }
 }
 
 #[tokio::main]
@@ -65,11 +65,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             Alarm { enable } => {
                 match enable {
                     true => info!("Enabling alarm.."),
-                    false => info!("Disabling alarm.."),
+                    false => info!("Disabling alarm..")
                 }
                 send_command(
                     BtAddr::from_str(&mac_address)
-                        .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
+                        .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?
                 )
                 .await?
             }
@@ -78,7 +78,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 send_divoom_animation(
                     BtAddr::from_str(&mac_address)
                         .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
-                    &mut file,
+                    &mut file
                 )?;
             }
         },

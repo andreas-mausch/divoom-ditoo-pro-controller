@@ -8,7 +8,7 @@ use super::command::Command;
 #[derive(Debug)]
 pub struct Packet {
     pub command: Command,
-    pub payload: Vec<u8>,
+    pub payload: Vec<u8>
 }
 
 impl Packet {

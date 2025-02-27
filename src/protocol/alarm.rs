@@ -13,7 +13,7 @@ pub struct Alarm {
     pub mode: u8,
     pub trigger_mode: u8,
     pub fm: [u8; 2],
-    pub volume: u8,
+    pub volume: u8
 }
 
 impl Alarm {

@@ -57,7 +57,7 @@ pub fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<DynamicImage, 
 
     let mut pixel_data_reader = BitReader::endian(
         reader.take(pixel_data_in_bytes.into()),
-        bitstream_io::LittleEndian,
+        bitstream_io::LittleEndian
     );
 
     for y in 0..height {
