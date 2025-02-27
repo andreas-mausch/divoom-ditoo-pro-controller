@@ -50,11 +50,13 @@ Look for a line containing `DitooPro-Light` or `DitooPro-Audio` and remember the
 Then, run the second command:
 
 ```shell-session
-$ cargo run send 11:22:33:44:55:66 alert off
+$ cargo run send 11:22:33:44:55:66 alarm off
+[2025-02-24T17:20:00Z INFO  divoom_ditoo_pro_controller] Disabling alarm..
 [2025-02-24T17:20:00Z INFO  divoom_ditoo_pro_controller] Connecting to device with MAC address 11:22:33:44:55:66
-[2025-02-24T17:20:01Z INFO  divoom_ditoo_pro_controller] Connection successful, socket over RFCOMM/SPP acquired
-[2025-02-24T17:20:02Z INFO  divoom_ditoo_pro_controller] Sending message..
-[2025-02-24T17:20:03Z INFO  divoom_ditoo_pro_controller] Wrote 17/17 bytes (100%)
+[2025-02-24T17:20:00Z INFO  divoom_ditoo_pro_controller] Connection successful, socket over RFCOMM/SPP acquired
+[2025-02-24T17:20:00Z INFO  divoom_ditoo_pro_controller] Sending packet 1/1..
+[2025-02-24T17:20:00Z DEBUG divoom_ditoo_pro_controller]   010d004300000d25000000000064e60002
+[2025-02-24T17:20:00Z INFO  divoom_ditoo_pro_controller]   Wrote 17/17 bytes (100%)
 ```
 
 Replace the MAC address by the one from the command above.

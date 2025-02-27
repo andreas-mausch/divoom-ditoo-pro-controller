@@ -8,7 +8,7 @@ use env_logger::{Builder, Env};
 use log::info;
 
 use Command::{DebugImage, ListDevices, Send};
-use SendCommand::{Alert, Animation};
+use SendCommand::{Alarm, Animation};
 
 use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animation};
 
@@ -44,7 +44,7 @@ enum Command {
 
 #[derive(Subcommand, Debug)]
 enum SendCommand {
-    Alert {
+    Alarm {
         #[arg(required = true, number_of_values = 1, value_parser = clap::builder::BoolishValueParser::new())]
         enable: bool,
     },
@@ -62,10 +62,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match args.command {
         ListDevices => list_devices().await?,
         Send { mac_address, send } => match send {
-            Alert { enable } => {
+            Alarm { enable } => {
                 match enable {
-                    true => info!("Enabling alert.."),
-                    false => info!("Disabling alert.."),
+                    true => info!("Enabling alarm.."),
+                    false => info!("Disabling alarm.."),
                 }
                 send_command(
                     BtAddr::from_str(&mac_address)
