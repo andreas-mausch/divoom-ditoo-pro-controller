@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::fs::File;
 use std::str::FromStr;
 
 use bluetooth_serial_port::BtAddr;
@@ -7,9 +8,9 @@ use env_logger::{Builder, Env};
 use log::info;
 
 use Command::{ListDevices, Send, DebugImage};
-use SendCommand::Alert;
+use SendCommand::{Alert, Animation};
 
-use divoom_ditoo_pro_controller::{list_devices, send_command};
+use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animation};
 
 pub mod divoom_file_format;
 
@@ -49,6 +50,9 @@ enum SendCommand {
         #[arg(required = true, number_of_values = 1, value_parser = clap::builder::BoolishValueParser::new())]
         enable: bool,
     },
+    Animation {
+        filename: String
+    }
 }
 
 #[tokio::main]
@@ -70,6 +74,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
                 )
                 .await?
+            },
+            Animation { filename } => {
+                let mut file = File::open(filename)?;
+                send_divoom_animation(BtAddr::from_str(&mac_address)
+                    .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?, &mut file)?;
             }
         },
         DebugImage { filename } => {
