@@ -64,6 +64,7 @@ Replace the MAC address by the one from the command above.
 More examples:
 
 ```bash
+cargo run debug-image ./images/witch.divoom16
 cargo run send 11:22:33:44:55:66 animation ./images/witch.divoom16
 ```
 
