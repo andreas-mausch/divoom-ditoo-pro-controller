@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
 use byteorder::{LittleEndian, WriteBytesExt};
-use log::info;
+use log::{debug, info};
 
 pub async fn list_devices() -> Result<(), Box<dyn Error>> {
     let duration = Duration::from_secs(20);
@@ -16,7 +16,7 @@ pub async fn list_devices() -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn send_command(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
-    let packet = hex::decode("010d00430000142e000200000028bc0002")?;
+    let packet = create_network_packet(0x43, &hex::decode("0000142e000200000028")?)?;
     send(mac_address, &[packet.as_slice()])
 }
 
@@ -32,6 +32,7 @@ fn send(mac_address: BtAddr, packets: &[&[u8]]) -> Result<(), Box<dyn Error>> {
         .enumerate()
         .try_for_each(|(index, packet)| -> Result<(), Box<dyn Error>> {
             info!("Sending packet {}/{}..", index + 1, packets.len());
+            debug!("  {:02x?}", packet);
 
             let num_bytes_written = socket.write(packet)?;
             info!(
@@ -64,7 +65,7 @@ fn create_network_packet(command: u8, payload: &[u8]) -> Result<Vec<u8>, Box<dyn
         writer.flush()?;
     }
 
-    let checksum = checksum(&packet[..packet_size as usize - 3]);
+    let checksum = checksum(&packet[1..]);
 
     {
         let mut writer = BufWriter::new(&mut packet);
