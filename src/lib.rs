@@ -32,7 +32,7 @@ fn send(mac_address: BtAddr, packets: &[&[u8]]) -> Result<(), Box<dyn Error>> {
         .enumerate()
         .try_for_each(|(index, packet)| -> Result<(), Box<dyn Error>> {
             info!("Sending packet {}/{}..", index + 1, packets.len());
-            debug!("  {:02x?}", packet);
+            debug!("  {}", hex::encode(packet));
 
             let num_bytes_written = socket.write(packet)?;
             info!(
@@ -41,6 +41,7 @@ fn send(mac_address: BtAddr, packets: &[&[u8]]) -> Result<(), Box<dyn Error>> {
                 packet.len(),
                 num_bytes_written * 100 / packet.len()
             );
+            std::thread::sleep(std::time::Duration::from_millis(200));
 
             Ok(())
         })?;
@@ -99,7 +100,6 @@ fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Vec<u8>>, Box<dyn
         .collect::<Result<Vec<_>, Box<dyn Error>>>()?;
     packets.append(&mut xxx);
 
-    info!("Packets; {:?}", packets);
     Ok(packets)
 }
 
@@ -109,7 +109,7 @@ pub fn send_divoom_animation<R: Read>(
 ) -> Result<(), Box<dyn Error>> {
     let mut animation = Vec::new();
     reader.read_to_end(&mut animation)?;
-    info!("{:?}", animation);
+
     let packets = create_network_packets_from(&animation)?;
     send(
         mac_address,
