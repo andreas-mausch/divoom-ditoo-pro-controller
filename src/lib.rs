@@ -6,6 +6,10 @@ use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
 use byteorder::{LittleEndian, WriteBytesExt};
 use log::{debug, info};
 
+pub mod protocol;
+
+use protocol::Packet;
+
 pub async fn list_devices() -> Result<(), Box<dyn Error>> {
     let duration = Duration::from_secs(20);
     info!("Scanning bluetooth devices for {:?}", duration);
@@ -16,11 +20,11 @@ pub async fn list_devices() -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn send_command(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
-    let packet = create_network_packet(0x43, &hex::decode("0000142e000200000028")?)?;
-    send(mac_address, &[packet.as_slice()])
+    let packet = Packet::from(0x43, &hex::decode("0000142e000200000028")?)?;
+    send(mac_address, &[packet])
 }
 
-fn send(mac_address: BtAddr, packets: &[&[u8]]) -> Result<(), Box<dyn Error>> {
+fn send(mac_address: BtAddr, packets: &[Packet]) -> Result<(), Box<dyn Error>> {
     info!("Connecting to device with MAC address {:?}", mac_address);
 
     let mut socket = BtSocket::new(BtProtocol::RFCOMM)?;
@@ -32,14 +36,15 @@ fn send(mac_address: BtAddr, packets: &[&[u8]]) -> Result<(), Box<dyn Error>> {
         .enumerate()
         .try_for_each(|(index, packet)| -> Result<(), Box<dyn Error>> {
             info!("Sending packet {}/{}..", index + 1, packets.len());
-            debug!("  {}", hex::encode(packet));
+            let serialized = packet.serialize()?;
+            debug!("  {}", hex::encode(&serialized));
 
-            let num_bytes_written = socket.write(packet)?;
+            let num_bytes_written = socket.write(&serialized)?;
             info!(
                 "  Wrote {}/{} bytes ({}%)",
                 num_bytes_written,
-                packet.len(),
-                num_bytes_written * 100 / packet.len()
+                serialized.len(),
+                num_bytes_written * 100 / serialized.len()
             );
             std::thread::sleep(std::time::Duration::from_millis(200));
 
@@ -49,40 +54,11 @@ fn send(mac_address: BtAddr, packets: &[&[u8]]) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn checksum(buffer: &[u8]) -> u16 {
-    buffer.iter().fold(0u16, |acc, x| acc + *x as u16)
-}
+fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Packet>, Box<dyn Error>> {
+    let mut packets = Vec::<Packet>::new();
+    packets.push(Packet::from(139, &hex::decode("00b4010000")?)?);
 
-fn create_network_packet(command: u8, payload: &[u8]) -> Result<Vec<u8>, Box<dyn Error>> {
-    let packet_size = (payload.len() + 7) as u16;
-    let mut packet = Vec::<u8>::with_capacity(packet_size as usize);
-
-    {
-        let mut writer = BufWriter::new(&mut packet);
-        writer.write_u8(1)?;
-        writer.write_u16::<LittleEndian>(packet_size - 4)?;
-        writer.write_u8(command)?;
-        writer.write_all(payload)?;
-        writer.flush()?;
-    }
-
-    let checksum = checksum(&packet[1..]);
-
-    {
-        let mut writer = BufWriter::new(&mut packet);
-        writer.write_u16::<LittleEndian>(checksum)?;
-        writer.write_u8(2)?;
-        writer.flush()?;
-    }
-
-    Ok(packet)
-}
-
-fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
-    let mut packets = Vec::<Vec<u8>>::new();
-    packets.push(create_network_packet(139, &hex::decode("00b4010000")?)?);
-
-    let mut xxx = animation
+    let mut animation_packets = animation
         .chunks(256)
         .enumerate()
         .map(|(index, chunk)| {
@@ -95,10 +71,10 @@ fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Vec<u8>>, Box<dyn
                 writer.write_u16::<LittleEndian>(index as u16)?;
                 writer.write_all(chunk)?;
             }
-            create_network_packet(139, &payload)
+            Packet::from(139, &payload)
         })
         .collect::<Result<Vec<_>, Box<dyn Error>>>()?;
-    packets.append(&mut xxx);
+    packets.append(&mut animation_packets);
 
     Ok(packets)
 }
@@ -113,10 +89,7 @@ pub fn send_divoom_animation<R: Read>(
     let packets = create_network_packets_from(&animation)?;
     send(
         mac_address,
-        &packets
-            .iter()
-            .map(|packet| packet.as_slice())
-            .collect::<Vec<&[u8]>>(),
+        &packets,
     )?;
     Ok(())
 }
