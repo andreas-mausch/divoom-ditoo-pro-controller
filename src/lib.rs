@@ -33,7 +33,10 @@ pub async fn send_command(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
         fm: [0, 0],
         volume: 100,
     };
-    let packet = Packet::from(Command::Alarm, &alarm.serialize()?)?;
+    let packet = Packet {
+        command: Command::Alarm,
+        payload: alarm.serialize()?
+    };
     send(mac_address, &[packet])
 }
 
@@ -69,10 +72,10 @@ fn send(mac_address: BtAddr, packets: &[Packet]) -> Result<(), Box<dyn Error>> {
 
 fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Packet>, Box<dyn Error>> {
     let mut packets = Vec::<Packet>::new();
-    packets.push(Packet::from(
-        Command::Animation,
-        &hex::decode("00b4010000")?,
-    )?);
+    packets.push(Packet {
+        command: Command::Animation,
+        payload: hex::decode("00b4010000")?,
+    });
 
     let mut animation_packets = animation
         .chunks(256)
@@ -86,7 +89,11 @@ fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Packet>, Box<dyn 
             writer.write_u16::<LittleEndian>(index as u16)?;
             writer.write_all(chunk)?;
             drop(writer);
-            Packet::from(Command::Animation, &payload)
+
+            Ok(Packet {
+                command: Command::Animation,
+                payload
+            })
         })
         .collect::<Result<Vec<_>, Box<dyn Error>>>()?;
     packets.append(&mut animation_packets);
