@@ -9,7 +9,7 @@ pub struct FrameHeader {
     length: u16,
     time_in_milliseconds: u16,
     reuse_palette: bool,
-    pub color_count: u8
+    pub color_count: u8,
 }
 
 impl FrameHeader {

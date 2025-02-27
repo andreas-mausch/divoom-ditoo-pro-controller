@@ -7,7 +7,7 @@ use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
 use log::info;
 
-use Command::{ListDevices, Send, DebugImage};
+use Command::{DebugImage, ListDevices, Send};
 use SendCommand::{Alert, Animation};
 
 use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animation};
@@ -39,9 +39,7 @@ enum Command {
     },
 
     /// Show detailed information about an image in Divoom file format
-    DebugImage {
-        filename: String
-    }
+    DebugImage { filename: String },
 }
 
 #[derive(Subcommand, Debug)]
@@ -51,8 +49,8 @@ enum SendCommand {
         enable: bool,
     },
     Animation {
-        filename: String
-    }
+        filename: String,
+    },
 }
 
 #[tokio::main]
@@ -74,11 +72,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
                 )
                 .await?
-            },
+            }
             Animation { filename } => {
                 let mut file = File::open(filename)?;
-                send_divoom_animation(BtAddr::from_str(&mac_address)
-                    .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?, &mut file)?;
+                send_divoom_animation(
+                    BtAddr::from_str(&mac_address)
+                        .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
+                    &mut file,
+                )?;
             }
         },
         DebugImage { filename } => {
