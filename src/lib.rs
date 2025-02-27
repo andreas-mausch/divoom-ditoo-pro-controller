@@ -9,9 +9,9 @@ use log::{debug, info};
 
 pub mod protocol;
 
-use protocol::Packet;
-use protocol::alarm::Alarm;
-use protocol::command::Command;
+use crate::protocol::alarm::Alarm;
+use crate::protocol::command::Command;
+use crate::protocol::packet::Packet;
 
 pub async fn list_devices() -> Result<(), Box<dyn Error>> {
     let duration = Duration::from_secs(20);
