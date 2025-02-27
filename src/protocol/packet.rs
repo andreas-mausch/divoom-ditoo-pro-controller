@@ -29,31 +29,25 @@ impl Packet {
 
     pub fn serialize(&self) -> Result<Vec<u8>, Box<dyn Error>> {
         let mut buffer = Vec::<u8>::new();
-
-        {
-            let mut writer = BufWriter::new(&mut buffer);
-            writer.write_u8(self.start)?;
-            writer.write_u16::<LittleEndian>(self.length)?;
-            writer.write_u8(self.command.value())?;
-            writer.write_all(&self.payload)?;
-            writer.write_u16::<LittleEndian>(self.checksum)?;
-            writer.write_u8(self.end)?;
-            writer.flush()?;
-        }
+        let mut writer = BufWriter::new(&mut buffer);
+        writer.write_u8(self.start)?;
+        writer.write_u16::<LittleEndian>(self.length)?;
+        writer.write_u8(self.command.value())?;
+        writer.write_all(&self.payload)?;
+        writer.write_u16::<LittleEndian>(self.checksum)?;
+        writer.write_u8(self.end)?;
+        drop(writer);
 
         Ok(buffer)
     }
 
     fn checksum(command: Command, payload: &[u8]) -> Result<u16, Box<dyn Error>> {
         let mut buffer = Vec::<u8>::new();
-
-        {
-            let mut writer = BufWriter::new(&mut buffer);
-            writer.write_u16::<LittleEndian>(payload.len() as u16 + 3)?;
-            writer.write_u8(command.value())?;
-            writer.write_all(payload)?;
-            writer.flush()?;
-        }
+        let mut writer = BufWriter::new(&mut buffer);
+        writer.write_u16::<LittleEndian>(payload.len() as u16 + 3)?;
+        writer.write_u8(command.value())?;
+        writer.write_all(payload)?;
+        drop(writer);
 
         Ok(Self::checksum_from_buffer(&buffer))
     }
