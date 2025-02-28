@@ -5,7 +5,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 #[derive(Debug)]
 pub struct FrameHeader {
   pub magic_number: u8,
-  length: u16,
+  _length: u16,
   pub time_in_milliseconds: u16,
   pub reuse_palette: bool,
   pub color_count: u8
@@ -21,7 +21,7 @@ impl FrameHeader {
 
     Ok(FrameHeader {
       magic_number,
-      length,
+      _length: length,
       time_in_milliseconds,
       reuse_palette,
       color_count
