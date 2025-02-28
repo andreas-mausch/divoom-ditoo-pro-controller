@@ -96,7 +96,7 @@ fn read_divoom_16x16_frame<R: Read>(
   })
 }
 
-fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<Vec<Frame>, Box<dyn Error>> {
+fn read_divoom_16x16_animation<R: Read>(reader: &mut R) -> Result<Vec<Frame>, Box<dyn Error>> {
   let mut frames = Vec::new();
 
   loop {
@@ -122,8 +122,8 @@ fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<Vec<Frame>, Box<dy
   Ok(frames)
 }
 
-pub fn read_divoom_16x16_image_from_file(filename: String) -> Result<Vec<Frame>, Box<dyn Error>> {
+pub fn read_divoom_16x16_animation_from_file(filename: String) -> Result<Vec<Frame>, Box<dyn Error>> {
   let file = File::open(filename)?;
   let mut reader = BufReader::new(file);
-  read_divoom_16x16_image(&mut reader)
+  read_divoom_16x16_animation(&mut reader)
 }
