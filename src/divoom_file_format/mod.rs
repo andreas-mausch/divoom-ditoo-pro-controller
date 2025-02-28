@@ -1,10 +1,12 @@
 use std::error::Error;
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::{BufReader, BufWriter, Read};
+use std::time::Duration;
 
 use bitstream_io::{BitRead, BitReader};
 use byteorder::ReadBytesExt;
-use image::{DynamicImage, Rgb, RgbImage};
+use image::{Delay, DynamicImage, Rgb, RgbImage};
+use image::codecs::gif::GifEncoder;
 use log::{debug, info};
 
 pub mod frame_header;
@@ -126,4 +128,18 @@ pub fn read_divoom_16x16_animation_from_file(filename: String) -> Result<Vec<Fra
   let file = File::open(filename)?;
   let mut reader = BufReader::new(file);
   read_divoom_16x16_animation(&mut reader)
+}
+
+pub fn save_animation_to_gif(frames: &[Frame], filename: &str) -> Result<(), Box<dyn Error>> {
+  let file = File::create(filename)?;
+  let writer = BufWriter::new(file);
+  let mut encoder = GifEncoder::new(writer);
+  encoder.set_repeat(image::codecs::gif::Repeat::Infinite);
+
+  frames.iter().try_for_each(|image| -> Result<(), Box<dyn Error>> {
+    let frame = image::Frame::from_parts(image.image.clone().into(), 0, 0,
+      Delay::from_saturating_duration(Duration::from_millis(image.header.time_in_milliseconds.into())));
+
+    Ok(encoder.encode_frame(frame)?)
+  })
 }

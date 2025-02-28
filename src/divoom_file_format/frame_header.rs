@@ -6,7 +6,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 pub struct FrameHeader {
   pub magic_number: u8,
   length: u16,
-  time_in_milliseconds: u16,
+  pub time_in_milliseconds: u16,
   pub reuse_palette: bool,
   pub color_count: u8
 }
