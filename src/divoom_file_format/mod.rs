@@ -134,7 +134,7 @@ pub fn save_animation_to_gif(frames: &[Frame], filename: &str) -> Result<(), Box
   let file = File::create(filename)?;
   let writer = BufWriter::new(file);
   let mut encoder = GifEncoder::new(writer);
-  encoder.set_repeat(image::codecs::gif::Repeat::Infinite);
+  encoder.set_repeat(image::codecs::gif::Repeat::Infinite)?;
 
   frames.iter().try_for_each(|image| -> Result<(), Box<dyn Error>> {
     let frame = image::Frame::from_parts(image.image.clone().into(), 0, 0,

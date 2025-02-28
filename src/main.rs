@@ -100,7 +100,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Convert { convert } => match convert {
       ToGif { input_filename, output_filename } => {
         let animation = read_divoom_16x16_animation_from_file(input_filename)?;
-        save_animation_to_gif(&animation, &output_filename);
+        save_animation_to_gif(&animation, &output_filename)?;
       }
     },
     DebugImage { filename } => {
