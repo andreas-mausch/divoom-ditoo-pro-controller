@@ -102,7 +102,7 @@ fn read_divoom_16x16_animation<R: Read>(reader: &mut R) -> Result<Vec<Frame>, Bo
   loop {
     match read_divoom_16x16_frame(
       reader,
-      &frames.last().map_or(&Vec::new(), |f: &Frame| &f.palette)
+      frames.last().map_or(&[], |f: &Frame| &f.palette)
     ) {
       Ok(frame) => frames.push(frame),
       Err(e) => {
