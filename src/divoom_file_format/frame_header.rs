@@ -3,12 +3,11 @@ use std::io::Read;
 use byteorder::{LittleEndian, ReadBytesExt};
 
 #[derive(Debug)]
-#[allow(dead_code)]
 pub struct FrameHeader {
   pub magic_number: u8,
   length: u16,
   time_in_milliseconds: u16,
-  reuse_palette: bool,
+  pub reuse_palette: bool,
   pub color_count: u8
 }
 

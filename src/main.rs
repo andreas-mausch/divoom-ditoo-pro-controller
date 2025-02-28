@@ -83,7 +83,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
       }
     },
     DebugImage { filename } => {
-      read_divoom_16x16_image_from_file(filename)?;
+      let animation = read_divoom_16x16_image_from_file(filename)?;
+      info!("Animation: ${:?}", animation);
     }
   }
 

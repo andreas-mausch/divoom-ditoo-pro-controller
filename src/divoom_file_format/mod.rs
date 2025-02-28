@@ -11,25 +11,39 @@ pub mod frame_header;
 
 use frame_header::FrameHeader;
 
-pub fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<DynamicImage, Box<dyn Error>> {
+#[derive(Debug)]
+pub struct Frame {
+  pub header: FrameHeader,
+  pub palette: Vec<Rgb<u8>>,
+  pub image: DynamicImage
+}
+
+fn read_divoom_16x16_frame<R: Read>(
+  reader: &mut R,
+  previous_palette: &[Rgb<u8>]
+) -> Result<Frame, Box<dyn Error>> {
   let mut image = RgbImage::new(16, 16);
 
-  let frame_header = FrameHeader::from_reader(reader)?;
-  info!("Image frame header: {:?}", frame_header);
+  let header = FrameHeader::from_reader(reader)?;
+  info!("Image frame header: {:?}", header);
 
-  if frame_header.magic_number != 0xAA {
+  if header.magic_number != 0xAA {
     return Err(
       format!(
         "Magic number does not match {:#04X}: {:#04X}",
-        0xAA, frame_header.magic_number
+        0xAA, header.magic_number
       )
       .into()
     );
   }
 
-  let mut palette = Vec::<Rgb<u8>>::new();
+  let mut palette = if header.reuse_palette {
+    previous_palette.to_vec()
+  } else {
+    Vec::new()
+  };
 
-  for _ in 0..frame_header.color_count {
+  for _ in 0..header.color_count {
     let red = reader.read_u8()?;
     let green = reader.read_u8()?;
     let blue = reader.read_u8()?;
@@ -75,10 +89,40 @@ pub fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<DynamicImage, 
     }
   }
 
-  Ok(DynamicImage::ImageRgb8(image))
+  Ok(Frame {
+    header,
+    palette,
+    image: DynamicImage::ImageRgb8(image)
+  })
 }
 
-pub fn read_divoom_16x16_image_from_file(filename: String) -> Result<DynamicImage, Box<dyn Error>> {
+fn read_divoom_16x16_image<R: Read>(reader: &mut R) -> Result<Vec<Frame>, Box<dyn Error>> {
+  let mut frames = Vec::new();
+
+  loop {
+    match read_divoom_16x16_frame(
+      reader,
+      &frames.last().map_or(&Vec::new(), |f: &Frame| &f.palette)
+    ) {
+      Ok(frame) => frames.push(frame),
+      Err(e) => {
+        if let Some(io_error) = e.downcast_ref::<std::io::Error>() {
+          // Unfortunately, I don't know an easier way to catch an EOF error
+          // This is not an error, but just the end of the file, so return what we've got so far.
+          if io_error.kind() == std::io::ErrorKind::UnexpectedEof {
+            break;
+          }
+        } else {
+          return Err(e);
+        }
+      }
+    }
+  }
+
+  Ok(frames)
+}
+
+pub fn read_divoom_16x16_image_from_file(filename: String) -> Result<Vec<Frame>, Box<dyn Error>> {
   let file = File::open(filename)?;
   let mut reader = BufReader::new(file);
   read_divoom_16x16_image(&mut reader)
