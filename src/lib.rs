@@ -79,7 +79,8 @@ fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Packet>, Box<dyn 
       file_size: animation.len() as u32,
       offset_id: 0,
       image_part: Vec::new()
-    }.serialize()?
+    }
+    .serialize()?
   });
 
   let mut animation_packets = animation
@@ -93,7 +94,8 @@ fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Packet>, Box<dyn 
           file_size: animation.len() as u32,
           offset_id: index as u16,
           image_part: chunk.to_vec()
-        }.serialize()?
+        }
+        .serialize()?
       })
     })
     .collect::<Result<Vec<_>, Box<dyn Error>>>()?;
