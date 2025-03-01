@@ -8,7 +8,7 @@ use env_logger::{Builder, Env};
 use log::info;
 
 use Command::{Convert, DebugImage, ListDevices, Send};
-use ConvertCommand::{ToGif};
+use ConvertCommand::ToGif;
 use SendCommand::{Alarm, Animation};
 
 use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animation};
@@ -98,7 +98,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
       }
     },
     Convert { convert } => match convert {
-      ToGif { input_filename, output_filename } => {
+      ToGif {
+        input_filename,
+        output_filename
+      } => {
         let animation = read_divoom_16x16_animation_from_file(input_filename)?;
         save_animation_to_gif(&animation, &output_filename)?;
       }
