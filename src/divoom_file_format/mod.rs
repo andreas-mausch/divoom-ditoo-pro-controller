@@ -30,16 +30,6 @@ impl Frame {
     let header = FrameHeader::from_reader(reader)?;
     info!("Image frame header: {:?}", header);
 
-    if header.magic_number != 0xAA {
-      return Err(
-        format!(
-          "Magic number does not match {:#04X}: {:#04X}",
-          0xAA, header.magic_number
-        )
-        .into()
-      );
-    }
-
     let mut palette = if header.reuse_palette {
       previous_palette.to_vec()
     } else {
