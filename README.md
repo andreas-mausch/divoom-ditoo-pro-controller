@@ -113,3 +113,7 @@ cargo clippy --all-targets --all-features -- --deny warnings
   <https://github.com/Grayda/pixoo64_example_images>
 - node-divoom-timebox-evo: PROTOCOL
   <https://github.com/RomRider/node-divoom-timebox-evo/blob/0.3.0/PROTOCOL.md>
+
+# Pixel art
+
+- <https://pixeljoint.com/pixels/new_icons.asp?search=&dimo=%3D&dim=16&colorso=%3E%3D&colors=2&tran=&anim=&iso=&av=&owner=&d=&dosearch=1&ob=search&action=search>
