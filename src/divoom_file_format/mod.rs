@@ -91,34 +91,11 @@ impl Frame {
   }
 }
 
-fn read_divoom_16x16_animation<R: Read>(reader: &mut R) -> Result<Animation, Box<dyn Error>> {
-  let mut frames = Vec::new();
-
-  loop {
-    match Frame::from_16x16(reader, frames.last().map_or(&[], |f: &Frame| &f.palette)) {
-      Ok(frame) => frames.push(frame),
-      Err(e) => {
-        if let Some(io_error) = e.downcast_ref::<std::io::Error>() {
-          // Unfortunately, I don't know an easier way to catch an EOF error
-          // This is not an error, but just the end of the file, so return what we've got so far.
-          if io_error.kind() == std::io::ErrorKind::UnexpectedEof {
-            break;
-          }
-        } else {
-          return Err(e);
-        }
-      }
-    }
-  }
-
-  Ok(Animation::from(frames))
-}
-
 pub fn read_divoom_16x16_animation_from_file(filename: &str) -> Result<Animation, Box<dyn Error>> {
   File::open(filename)
     .map(BufReader::new)
     .map_err(|e| e.into())
-    .and_then(|mut reader| read_divoom_16x16_animation(&mut reader))
+    .and_then(|mut reader| Animation::from_16x16(&mut reader))
 }
 
 fn _get_palette_from_images(images: &[DynamicImage]) -> IndexSet<Rgb<u8>> {
