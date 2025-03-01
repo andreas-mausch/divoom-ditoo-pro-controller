@@ -115,7 +115,7 @@ fn read_divoom_16x16_animation<R: Read>(reader: &mut R) -> Result<Animation, Box
 }
 
 pub fn read_divoom_16x16_animation_from_file(
-  filename: String
+  filename: &str
 ) -> Result<Animation, Box<dyn Error>> {
   let file = File::open(filename)?;
   let mut reader = BufReader::new(file);

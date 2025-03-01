@@ -102,12 +102,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         input_filename,
         output_filename
       } => {
-        let animation = read_divoom_16x16_animation_from_file(input_filename)?;
+        let animation = read_divoom_16x16_animation_from_file(&input_filename)?;
         animation.save_to_gif(&output_filename)?;
       }
     },
     DebugImage { filename } => {
-      read_divoom_16x16_animation_from_file(filename)?;
+      read_divoom_16x16_animation_from_file(&filename)?;
     }
   }
 
