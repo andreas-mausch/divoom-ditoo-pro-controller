@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::fs::File;
+use std::io::BufWriter;
 use std::str::FromStr;
 
 use bluetooth_serial_port::BtAddr;
@@ -103,7 +104,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         output_filename
       } => {
         let animation = read_divoom_16x16_animation_from_file(&input_filename)?;
-        animation.save_to_gif(&output_filename)?;
+        animation.save_to_gif(&mut BufWriter::new(File::open(output_filename)?))?;
       }
     },
     DebugImage { filename } => {

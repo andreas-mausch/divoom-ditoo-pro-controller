@@ -1,6 +1,5 @@
 use std::error::Error;
-use std::fs::File;
-use std::io::{Read, BufWriter};
+use std::io::{Read, Write};
 use std::time::Duration;
 
 use image::codecs::gif::{GifEncoder, Repeat};
@@ -37,9 +36,7 @@ impl Animation {
     Ok(Animation { frames })
   }
 
-  pub fn save_to_gif(&self, filename: &str) -> Result<(), Box<dyn Error>> {
-    let file = File::create(filename)?;
-    let writer = BufWriter::new(file);
+  pub fn save_to_gif<W: Write>(&self, writer: &mut W) -> Result<(), Box<dyn Error>> {
     let mut encoder = GifEncoder::new(writer);
     encoder.set_repeat(Repeat::Infinite)?;
 
