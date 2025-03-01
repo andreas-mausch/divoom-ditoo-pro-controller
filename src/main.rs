@@ -15,7 +15,7 @@ use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animat
 
 pub mod divoom_file_format;
 
-use crate::divoom_file_format::{read_divoom_16x16_animation_from_file, save_animation_to_gif};
+use crate::divoom_file_format::read_divoom_16x16_animation_from_file;
 
 /// CLI tool to send bluetooth commands to a Divoom Ditoo Pro
 #[derive(Parser, Debug)]
@@ -103,7 +103,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         output_filename
       } => {
         let animation = read_divoom_16x16_animation_from_file(input_filename)?;
-        save_animation_to_gif(&animation, &output_filename)?;
+        animation.save_to_gif(&output_filename)?;
       }
     },
     DebugImage { filename } => {

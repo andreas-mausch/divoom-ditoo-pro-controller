@@ -1,17 +1,17 @@
 use std::error::Error;
 use std::fs::File;
-use std::io::{BufReader, BufWriter, Read};
-use std::time::Duration;
+use std::io::{BufReader, Read};
 
 use bitstream_io::{BitRead, BitReader};
 use byteorder::ReadBytesExt;
-use image::codecs::gif::GifEncoder;
-use image::{Delay, DynamicImage, GenericImageView, Rgb, RgbImage};
+use image::{DynamicImage, GenericImageView, Rgb, RgbImage};
 use indexmap::IndexSet;
 use log::{debug, info};
 
+pub mod animation;
 pub mod frame_header;
 
+use animation::Animation;
 use frame_header::FrameHeader;
 
 #[derive(Debug)]
@@ -91,8 +91,6 @@ impl Frame {
   }
 }
 
-type Animation = Vec<Frame>;
-
 fn read_divoom_16x16_animation<R: Read>(reader: &mut R) -> Result<Animation, Box<dyn Error>> {
   let mut frames = Vec::new();
 
@@ -113,7 +111,7 @@ fn read_divoom_16x16_animation<R: Read>(reader: &mut R) -> Result<Animation, Box
     }
   }
 
-  Ok(frames)
+  Ok(Animation::from(frames))
 }
 
 pub fn read_divoom_16x16_animation_from_file(
@@ -124,32 +122,14 @@ pub fn read_divoom_16x16_animation_from_file(
   read_divoom_16x16_animation(&mut reader)
 }
 
-pub fn save_animation_to_gif(frames: &[Frame], filename: &str) -> Result<(), Box<dyn Error>> {
-  let file = File::create(filename)?;
-  let writer = BufWriter::new(file);
-  let mut encoder = GifEncoder::new(writer);
-  encoder.set_repeat(image::codecs::gif::Repeat::Infinite)?;
-
-  frames
-    .iter()
-    .try_for_each(|image| -> Result<(), Box<dyn Error>> {
-      let frame = image::Frame::from_parts(
-        image.image.clone().into(),
-        0,
-        0,
-        Delay::from_saturating_duration(Duration::from_millis(
-          image.header.time_in_milliseconds.into()
-        ))
-      );
-
-      Ok(encoder.encode_frame(frame)?)
-    })
-}
-
 fn _get_palette_from_images(images: &[DynamicImage]) -> IndexSet<Rgb<u8>> {
-  images.iter().flat_map(|image| {
-    image.pixels().map(|(_x, _y, pixel_data)| {
-      Rgb([pixel_data[0], pixel_data[1], pixel_data[2]])
-    }).collect::<IndexSet<_>>()
-  }).collect()
+  images
+    .iter()
+    .flat_map(|image| {
+      image
+        .pixels()
+        .map(|(_x, _y, pixel_data)| Rgb([pixel_data[0], pixel_data[1], pixel_data[2]]))
+        .collect::<IndexSet<_>>()
+    })
+    .collect()
 }
