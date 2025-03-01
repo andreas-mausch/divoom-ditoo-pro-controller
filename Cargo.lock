@@ -409,6 +409,7 @@ dependencies = [
  "futures",
  "hex",
  "image",
+ "indexmap",
  "log",
  "time",
  "tokio",

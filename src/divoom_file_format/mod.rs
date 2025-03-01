@@ -6,7 +6,8 @@ use std::time::Duration;
 use bitstream_io::{BitRead, BitReader};
 use byteorder::ReadBytesExt;
 use image::codecs::gif::GifEncoder;
-use image::{Delay, DynamicImage, Rgb, RgbImage};
+use image::{Delay, DynamicImage, GenericImageView, Rgb, RgbImage};
+use indexmap::IndexSet;
 use log::{debug, info};
 
 pub mod frame_header;
@@ -143,4 +144,12 @@ pub fn save_animation_to_gif(frames: &[Frame], filename: &str) -> Result<(), Box
 
       Ok(encoder.encode_frame(frame)?)
     })
+}
+
+fn _get_palette_from_images(images: &[DynamicImage]) -> IndexSet<Rgb<u8>> {
+  images.iter().flat_map(|image| {
+    image.pixels().map(|(_x, _y, pixel_data)| {
+      Rgb([pixel_data[0], pixel_data[1], pixel_data[2]])
+    }).collect::<IndexSet<_>>()
+  }).collect()
 }
