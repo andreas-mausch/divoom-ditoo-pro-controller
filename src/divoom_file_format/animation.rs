@@ -6,7 +6,7 @@ use std::time::Duration;
 use image::codecs::gif::{GifEncoder, Repeat};
 use image::Delay;
 
-use super::Frame;
+use super::frame::Frame;
 
 #[derive(Debug)]
 pub struct Animation {
