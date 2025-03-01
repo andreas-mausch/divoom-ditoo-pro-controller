@@ -9,7 +9,7 @@ use super::frame::Frame;
 
 #[derive(Debug)]
 pub struct Animation {
-  frames: Vec<Frame>
+  pub frames: Vec<Frame>
 }
 
 impl Animation {
