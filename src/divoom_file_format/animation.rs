@@ -56,4 +56,27 @@ impl Animation {
         Ok(encoder.encode_frame(frame)?)
       })
   }
+
+  pub fn save_to_divoom_format<W: Write>(&self, mut writer: &mut W) -> Result<(), Box<dyn Error>> {
+    let mut palette = Vec::new();
+
+    self
+      .frames
+      .iter()
+      .try_for_each(|frame| -> Result<(), Box<dyn Error>> {
+        if frame.header.reuse_palette {
+          // TODO: I think the palette is not correct here.
+          // frame.palette exists of all colors in that frame,
+          // and palette might already contain some of that colors.
+          // I think the best solution is to only store new colors in case of reuse-palette=true,
+          // or to have a field local_palette in Frame.
+          // Needs a test.
+          palette.extend(frame.palette.clone());
+        } else {
+          palette = frame.palette.clone();
+        }
+        frame.serialize(&palette, &mut writer)?;
+        Ok(())
+      })
+  }
 }

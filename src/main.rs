@@ -9,14 +9,14 @@ use env_logger::{Builder, Env};
 use log::info;
 
 use Command::{Convert, DebugImage, ListDevices, Send};
-use ConvertCommand::ToGif;
+use ConvertCommand::{ToDivoom16, ToGif};
 use SendCommand::{Alarm, Animation};
 
 use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animation};
 
 pub mod divoom_file_format;
 
-use crate::divoom_file_format::read_divoom_16x16_animation_from_file;
+use crate::divoom_file_format::{read_divoom_16x16_animation_from_file, read_gif_from_file};
 
 /// CLI tool to send bluetooth commands to a Divoom Ditoo Pro
 #[derive(Parser, Debug)]
@@ -66,6 +66,10 @@ enum ConvertCommand {
   ToGif {
     input_filename: String,
     output_filename: String
+  },
+  ToDivoom16 {
+    input_filename: String,
+    output_filename: String
   }
 }
 
@@ -104,7 +108,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
         output_filename
       } => {
         let animation = read_divoom_16x16_animation_from_file(&input_filename)?;
-        animation.save_to_gif(&mut BufWriter::new(File::open(output_filename)?))?;
+        animation.save_to_gif(&mut BufWriter::new(File::create(output_filename)?))?;
+      }
+      ToDivoom16 {
+        input_filename,
+        output_filename
+      } => {
+        let animation = read_gif_from_file(&input_filename)?;
+        animation.save_to_divoom_format(&mut BufWriter::new(File::create(output_filename)?))?;
       }
     },
     DebugImage { filename } => {
