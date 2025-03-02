@@ -11,7 +11,6 @@ use log::{debug, info};
 use Command::{Convert, DebugImage, ListDevices, Send};
 
 use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animation};
-use divoom_ditoo_pro_controller::divoom_file_format::read_divoom_16x16_animation_from_file;
 use divoom_ditoo_pro_controller::divoom_file_format::animation::Animation;
 use divoom_ditoo_pro_controller::divoom_file_format::frame::bits_per_pixel;
 
@@ -104,7 +103,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         input_filename,
         output_filename
       } => {
-        let animation = read_divoom_16x16_animation_from_file(&input_filename)?;
+        let animation = Animation::from_16x16(&mut BufReader::new(File::open(input_filename)?))?;
         animation.save_to_gif(&mut BufWriter::new(File::create(output_filename)?))?;
       }
       ConvertCommand::ToDivoom16 {
@@ -116,7 +115,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
       }
     },
     DebugImage { filename } => {
-      let animation = read_divoom_16x16_animation_from_file(&filename)?;
+      let animation = Animation::from_16x16(&mut BufReader::new(File::open(filename)?))?;
       animation.frames.iter().enumerate().for_each(|(index, frame)| {
 
         let bits_per_pixel = bits_per_pixel(frame.palette.len() as u32);
