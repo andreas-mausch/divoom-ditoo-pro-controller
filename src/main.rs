@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::fs::File;
-use std::io::BufWriter;
+use std::io::{BufReader, BufWriter};
 use std::str::FromStr;
 
 use bluetooth_serial_port::BtAddr;
@@ -9,11 +9,10 @@ use env_logger::{Builder, Env};
 use log::{debug, info};
 
 use Command::{Convert, DebugImage, ListDevices, Send};
-use ConvertCommand::{ToDivoom16, ToGif};
-use SendCommand::{Alarm, Animation};
 
 use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animation};
-use divoom_ditoo_pro_controller::divoom_file_format::{read_divoom_16x16_animation_from_file, read_gif_from_file};
+use divoom_ditoo_pro_controller::divoom_file_format::read_divoom_16x16_animation_from_file;
+use divoom_ditoo_pro_controller::divoom_file_format::animation::Animation;
 use divoom_ditoo_pro_controller::divoom_file_format::frame::bits_per_pixel;
 
 /// CLI tool to send bluetooth commands to a Divoom Ditoo Pro
@@ -80,7 +79,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
   match args.command {
     ListDevices => list_devices().await?,
     Send { mac_address, send } => match send {
-      Alarm { enable } => {
+      SendCommand::Alarm { enable } => {
         match enable {
           true => info!("Enabling alarm.."),
           false => info!("Disabling alarm..")
@@ -91,7 +90,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         )
         .await?
       }
-      Animation { filename } => {
+      SendCommand::Animation { filename } => {
         let mut file = File::open(filename)?;
         send_divoom_animation(
           BtAddr::from_str(&mac_address)
@@ -101,18 +100,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
       }
     },
     Convert { convert } => match convert {
-      ToGif {
+      ConvertCommand::ToGif {
         input_filename,
         output_filename
       } => {
         let animation = read_divoom_16x16_animation_from_file(&input_filename)?;
         animation.save_to_gif(&mut BufWriter::new(File::create(output_filename)?))?;
       }
-      ToDivoom16 {
+      ConvertCommand::ToDivoom16 {
         input_filename,
         output_filename
       } => {
-        let animation = read_gif_from_file(&input_filename)?;
+        let animation = Animation::from_gif(&mut BufReader::new(File::open(input_filename)?))?;
         animation.save_to_divoom_format(&mut BufWriter::new(File::create(output_filename)?))?;
       }
     },
