@@ -20,6 +20,9 @@ bitstream-io = "2.6.0"
 chrono = "0.4.40"
 indexmap = "2.7.1"
 
+[dev-dependencies]
+spectral = "0.6.0"
+
 [lints.clippy]
 panic = "warn"
 expect_used = "warn"

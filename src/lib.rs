@@ -6,6 +6,7 @@ use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
 use chrono::NaiveTime;
 use log::{debug, info};
 
+pub mod divoom_file_format;
 pub mod protocol;
 
 use crate::protocol::alarm::Alarm;

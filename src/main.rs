@@ -13,10 +13,7 @@ use ConvertCommand::{ToDivoom16, ToGif};
 use SendCommand::{Alarm, Animation};
 
 use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animation};
-
-pub mod divoom_file_format;
-
-use crate::divoom_file_format::{read_divoom_16x16_animation_from_file, read_gif_from_file};
+use divoom_ditoo_pro_controller::divoom_file_format::{read_divoom_16x16_animation_from_file, read_gif_from_file};
 
 /// CLI tool to send bluetooth commands to a Divoom Ditoo Pro
 #[derive(Parser, Debug)]

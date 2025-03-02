@@ -75,6 +75,12 @@ cargo run convert to-divoom16 ./out.gif ./out.divoom16
 Please note the Bluetooth adapter is chosen automatically.
 There is currently no way to configure it.
 
+# Run tests
+
+```bash
+cargo test --all
+```
+
 # Update dependencies
 
 `cargo update` only updates dependencies inside `Cargo.lock`.
