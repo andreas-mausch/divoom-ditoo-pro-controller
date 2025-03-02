@@ -79,7 +79,7 @@ impl Frame {
     writer: &mut W
   ) -> Result<(), Box<dyn Error>> {
     let pixel_data = self.build_pixel_data(palette)?;
-    let length = 7 + self.palette.len() * 3 + pixel_data.len();
+    let length = 7 + self.local_palette.len() * 3 + pixel_data.len();
 
     writer.write_u8(FRAME_HEADER_MAGIC_NUMBER)?;
     writer.write_u16::<LittleEndian>(length as u16)?;
@@ -88,7 +88,7 @@ impl Frame {
     writer.write_u8(self.header.color_count)?;
 
     self
-      .palette
+      .local_palette
       .iter()
       .try_for_each(|color| writer.write_all(color.channels()))?;
 

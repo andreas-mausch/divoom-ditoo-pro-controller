@@ -81,11 +81,7 @@ pub fn read_gif_from_file(filename: &str) -> Result<Animation, Box<dyn Error>> {
 
         Frame {
           header,
-          palette: if index == 0 {
-            palette.clone()
-          } else {
-            Vec::new()
-          },
+          palette: palette.clone(),
           local_palette: if index == 0 {
             palette.clone()
           } else {
