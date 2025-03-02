@@ -6,7 +6,7 @@ use std::str::FromStr;
 use bluetooth_serial_port::BtAddr;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
-use log::info;
+use log::{debug, info};
 
 use Command::{Convert, DebugImage, ListDevices, Send};
 use ConvertCommand::{ToDivoom16, ToGif};
@@ -116,7 +116,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
       }
     },
     DebugImage { filename } => {
-      read_divoom_16x16_animation_from_file(&filename)?;
+      let animation = read_divoom_16x16_animation_from_file(&filename)?;
+      animation.frames.iter().enumerate().for_each(|(index, frame)| {
+        debug!("Frame #{}", index);
+        debug!("  {:?}", frame.header);
+        debug!("  Local palette: {:?}", frame.local_palette.iter().map(|color| format!("#{:02X}{:02X}{:02X}", color[0], color[1], color[2])).collect::<Vec<_>>());
+      })
     }
   }
 

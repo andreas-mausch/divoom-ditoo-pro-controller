@@ -4,7 +4,7 @@ use std::io::{Read, Write};
 use bitstream_io::{BitRead, BitReader, BitWrite, BitWriter};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use image::{DynamicImage, GenericImageView, Pixel, Rgb, RgbImage};
-use log::{debug, info};
+use log::info;
 
 use super::frame_header::{FrameHeader, FRAME_HEADER_MAGIC_NUMBER};
 
@@ -38,11 +38,6 @@ impl Frame {
       let red = reader.read_u8()?;
       let green = reader.read_u8()?;
       let blue = reader.read_u8()?;
-
-      info!(
-        "Adding color to palette: #{:02X}{:02X}{:02X}",
-        red, green, blue
-      );
       local_palette.push(Rgb([red, green, blue]));
     }
 
@@ -60,7 +55,7 @@ impl Frame {
     let pixel_data_in_bits = width * height * bits_per_pixel as u32;
     let pixel_data_in_bytes = pixel_data_in_bits.div_ceil(8);
     info!(
-      "Pixel data is: {} bits = {} bytes",
+      "Pixel data size: {} bits = {} bytes",
       pixel_data_in_bits, pixel_data_in_bytes
     );
 
@@ -73,10 +68,6 @@ impl Frame {
       for x in 0..width {
         let palette_index = pixel_data_reader.read::<u8>(bits_per_pixel.into())?;
         let palette_entry = palette[palette_index as usize];
-        debug!(
-          "Palette index {}x{}: {} ({:?})",
-          x, y, palette_index, palette_entry
-        );
 
         image.put_pixel(x, y, palette_entry);
       }
