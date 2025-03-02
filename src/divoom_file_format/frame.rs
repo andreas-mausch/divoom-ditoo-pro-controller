@@ -12,6 +12,7 @@ use super::frame_header::{FrameHeader, FRAME_HEADER_MAGIC_NUMBER};
 pub struct Frame {
   pub header: FrameHeader,
   pub palette: Vec<Rgb<u8>>,
+  pub local_palette: Vec<Rgb<u8>>,
   pub image: DynamicImage
 }
 
@@ -25,11 +26,13 @@ impl Frame {
     let header = FrameHeader::from_reader(reader)?;
     info!("Image frame header: {:?}", header);
 
-    let mut palette = if header.reuse_palette {
+    let previous_palette = if header.reuse_palette {
       previous_palette.to_vec()
     } else {
       Vec::new()
     };
+
+    let mut local_palette = Vec::new();
 
     for _ in 0..header.color_count {
       let red = reader.read_u8()?;
@@ -40,8 +43,10 @@ impl Frame {
         "Adding color to palette: #{:02X}{:02X}{:02X}",
         red, green, blue
       );
-      palette.push(Rgb([red, green, blue]));
+      local_palette.push(Rgb([red, green, blue]));
     }
+
+    let palette = [previous_palette.as_slice(), local_palette.as_slice()].concat();
 
     let bits_per_pixel: u8 = f32::log2(palette.len() as f32).ceil() as u8;
     info!(
@@ -80,6 +85,7 @@ impl Frame {
     Ok(Frame {
       header,
       palette,
+      local_palette,
       image: DynamicImage::ImageRgb8(image)
     })
   }
