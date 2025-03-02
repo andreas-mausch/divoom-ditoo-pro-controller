@@ -4,9 +4,12 @@ use std::io::{Read, Write};
 use bitstream_io::{BitRead, BitReader, BitWrite, BitWriter};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use image::{DynamicImage, GenericImageView, Pixel, Rgb, RgbImage};
-use log::info;
 
 use super::frame_header::{FrameHeader, FRAME_HEADER_MAGIC_NUMBER};
+
+pub fn bits_per_pixel(color_count: u32) -> u8 {
+  f32::log2(color_count as f32).ceil() as u8
+}
 
 #[derive(Debug)]
 pub struct Frame {
@@ -24,7 +27,6 @@ impl Frame {
     let mut image = RgbImage::new(16, 16);
 
     let header = FrameHeader::from_reader(reader)?;
-    info!("Image frame header: {:?}", header);
 
     let previous_palette = if header.reuse_palette {
       previous_palette.to_vec()
@@ -43,21 +45,11 @@ impl Frame {
 
     let palette = [previous_palette.as_slice(), local_palette.as_slice()].concat();
 
-    let bits_per_pixel: u8 = f32::log2(palette.len() as f32).ceil() as u8;
-    info!(
-      "Color count: {}; Bits per pixel: {}",
-      palette.len(),
-      bits_per_pixel
-    );
-
-    let width = 16u32;
-    let height = 16u32;
+    let bits_per_pixel: u8 = bits_per_pixel(palette.len() as u32);
+    let width = 16;
+    let height = 16;
     let pixel_data_in_bits = width * height * bits_per_pixel as u32;
     let pixel_data_in_bytes = pixel_data_in_bits.div_ceil(8);
-    info!(
-      "Pixel data size: {} bits = {} bytes",
-      pixel_data_in_bits, pixel_data_in_bytes
-    );
 
     let mut pixel_data_reader = BitReader::endian(
       reader.take(pixel_data_in_bytes.into()),
@@ -105,7 +97,7 @@ impl Frame {
   }
 
   fn build_pixel_data(&self, palette: &[Rgb<u8>]) -> Result<Vec<u8>, Box<dyn Error>> {
-    let bits_per_pixel: u8 = f32::log2(palette.len() as f32).ceil() as u8;
+    let bits_per_pixel: u8 = bits_per_pixel(palette.len() as u32);
     let width = 16;
     let height = 16;
 
