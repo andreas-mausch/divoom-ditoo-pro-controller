@@ -67,7 +67,7 @@ More examples:
 cargo run debug-image ./images/witch.divoom16
 cargo run send 11:22:33:44:55:66 animation ./images/witch.divoom16
 cargo run convert to-gif ./images/witch.divoom16 ./out.gif
-cargo run convert to-divoom16 ./out.gif ./out.divoom16
+cargo run convert to-divoom16 ./images/witch.gif ./out.divoom16
 ```
 
 # Bluetooth adapter
