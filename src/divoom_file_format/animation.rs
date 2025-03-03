@@ -3,11 +3,11 @@ use std::io::{BufRead, Read, Seek, Write};
 use std::time::Duration;
 
 use image::codecs::gif::{GifDecoder, GifEncoder, Repeat};
-use image::{AnimationDecoder, DynamicImage, Delay};
+use image::{AnimationDecoder, Delay, DynamicImage};
 
-use super::get_palette_from_images;
 use super::frame::Frame;
 use super::frame_header::FrameHeader;
+use super::get_palette_from_images;
 
 #[derive(Debug)]
 pub struct Animation {

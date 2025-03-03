@@ -10,9 +10,9 @@ use log::{debug, info};
 
 use Command::{Convert, DebugImage, ListDevices, Send};
 
-use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animation};
 use divoom_ditoo_pro_controller::divoom_file_format::animation::Animation;
 use divoom_ditoo_pro_controller::divoom_file_format::frame::bits_per_pixel;
+use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animation};
 
 /// CLI tool to send bluetooth commands to a Divoom Ditoo Pro
 #[derive(Parser, Debug)]
@@ -116,18 +116,35 @@ async fn main() -> Result<(), Box<dyn Error>> {
     },
     DebugImage { filename } => {
       let animation = Animation::from_16x16(&mut BufReader::new(File::open(filename)?))?;
-      animation.frames.iter().enumerate().for_each(|(index, frame)| {
+      animation
+        .frames
+        .iter()
+        .enumerate()
+        .for_each(|(index, frame)| {
+          let bits_per_pixel = bits_per_pixel(frame.palette.len() as u32);
+          let pixel_data_in_bits = 16 * 16 * bits_per_pixel as u32;
+          let pixel_data_in_bytes = pixel_data_in_bits.div_ceil(8);
 
-        let bits_per_pixel = bits_per_pixel(frame.palette.len() as u32);
-        let pixel_data_in_bits = 16 * 16 * bits_per_pixel as u32;
-        let pixel_data_in_bytes = pixel_data_in_bits.div_ceil(8);
-
-        debug!("Frame #{}", index);
-        debug!("  Pixel data size: {} bits = {} bytes", pixel_data_in_bits, pixel_data_in_bytes);
-        debug!("  {:?}", frame.header);
-        debug!("  Color count: {} / Bits per pixel: {}", frame.palette.len(), bits_per_pixel);
-        debug!("  Local palette: {:?}", frame.local_palette.iter().map(|color| format!("#{:02X}{:02X}{:02X}", color[0], color[1], color[2])).collect::<Vec<_>>());
-      })
+          debug!("Frame #{}", index);
+          debug!(
+            "  Pixel data size: {} bits = {} bytes",
+            pixel_data_in_bits, pixel_data_in_bytes
+          );
+          debug!("  {:?}", frame.header);
+          debug!(
+            "  Color count: {} / Bits per pixel: {}",
+            frame.palette.len(),
+            bits_per_pixel
+          );
+          debug!(
+            "  Local palette: {:?}",
+            frame
+              .local_palette
+              .iter()
+              .map(|color| format!("#{:02X}{:02X}{:02X}", color[0], color[1], color[2]))
+              .collect::<Vec<_>>()
+          );
+        })
     }
   }
 
