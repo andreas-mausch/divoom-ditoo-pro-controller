@@ -14,7 +14,9 @@ The protocol however is basic Bluetooth, which can be reverse-engineered.
 - cargo-outdated
 - clippy
 
-I have compiled this repo with Rust 1.82.0.
+I have compiled this repo with Rust 1.82.0 on Manjaro Linux.
+
+Note that the dependency `bluetooth-serial-port` only works *on Linux/BlueZ*.
 
 # Blog post
 
