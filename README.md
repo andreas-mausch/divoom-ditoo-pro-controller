@@ -55,7 +55,7 @@ cargo run convert to-divoom16 ./images/witch.gif ./out.divoom16
 Please note the Bluetooth adapter is chosen automatically.
 There is currently no way to configure it.
 
-# Developmet
+# Development
 
 See [Development.md](Development.md).
 
