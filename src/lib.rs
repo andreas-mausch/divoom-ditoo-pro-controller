@@ -3,7 +3,7 @@ use std::io::{Read, Write};
 use std::time::Duration;
 
 use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
-use chrono::NaiveTime;
+use chrono::{NaiveDateTime, NaiveTime};
 use log::{debug, info};
 
 pub mod divoom_file_format;
@@ -12,6 +12,7 @@ pub mod protocol;
 use crate::protocol::alarm::Alarm;
 use crate::protocol::animation::{Animation, ControlWord};
 use crate::protocol::command::Command;
+use crate::protocol::datetime::DateTime;
 use crate::protocol::packet::Packet;
 
 pub async fn list_devices() -> Result<(), Box<dyn Error>> {
@@ -21,24 +22,6 @@ pub async fn list_devices() -> Result<(), Box<dyn Error>> {
   info!("Found bluetooth devices {:?}", devices);
 
   Ok(())
-}
-
-pub async fn send_command(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
-  let alarm = Alarm {
-    index: 0,
-    enable: false,
-    time: NaiveTime::from_hms_opt(13, 37, 0).ok_or("Invalid time")?,
-    repeat: 0,
-    mode: 0,
-    trigger_mode: 0,
-    fm: [0, 0],
-    volume: 100
-  };
-  let packet = Packet {
-    command: Command::Alarm,
-    payload: alarm.serialize()?
-  };
-  send(mac_address, &[packet])
 }
 
 fn send(mac_address: BtAddr, packets: &[Packet]) -> Result<(), Box<dyn Error>> {
@@ -105,6 +88,24 @@ fn create_network_packets_from(animation: &[u8]) -> Result<Vec<Packet>, Box<dyn 
   Ok(packets)
 }
 
+pub async fn send_alarm(mac_address: BtAddr) -> Result<(), Box<dyn Error>> {
+  let alarm = Alarm {
+    index: 0,
+    enable: false,
+    time: NaiveTime::from_hms_opt(13, 37, 0).ok_or("Invalid time")?,
+    repeat: 0,
+    mode: 0,
+    trigger_mode: 0,
+    fm: [0, 0],
+    volume: 100
+  };
+  let packet = Packet {
+    command: Command::Alarm,
+    payload: alarm.serialize()?
+  };
+  send(mac_address, &[packet])
+}
+
 pub fn send_divoom_animation<R: Read>(
   mac_address: BtAddr,
   reader: &mut R
@@ -115,4 +116,16 @@ pub fn send_divoom_animation<R: Read>(
   let packets = create_network_packets_from(&animation)?;
   send(mac_address, &packets)?;
   Ok(())
+}
+
+pub async fn send_set_datetime(
+  mac_address: BtAddr,
+  datetime: NaiveDateTime
+) -> Result<(), Box<dyn Error>> {
+  let payload = DateTime { datetime };
+  let packet = Packet {
+    command: Command::SetDateTime,
+    payload: payload.serialize()?
+  };
+  send(mac_address, &[packet])
 }

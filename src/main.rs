@@ -4,6 +4,7 @@ use std::io::{BufReader, BufWriter};
 use std::str::FromStr;
 
 use bluetooth_serial_port::BtAddr;
+use chrono::NaiveDateTime;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
 use log::{debug, info};
@@ -12,7 +13,9 @@ use Command::{Convert, DebugImage, ListDevices, Send};
 
 use divoom_ditoo_pro_controller::divoom_file_format::animation::Animation;
 use divoom_ditoo_pro_controller::divoom_file_format::frame::bits_per_pixel;
-use divoom_ditoo_pro_controller::{list_devices, send_command, send_divoom_animation};
+use divoom_ditoo_pro_controller::{
+  list_devices, send_alarm, send_divoom_animation, send_set_datetime
+};
 
 /// CLI tool to send bluetooth commands to a Divoom Ditoo Pro
 #[derive(Parser, Debug)]
@@ -54,6 +57,9 @@ enum SendCommand {
   },
   Animation {
     filename: String
+  },
+  SetDateTime {
+    datetime: NaiveDateTime
   }
 }
 
@@ -83,7 +89,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
           true => info!("Enabling alarm.."),
           false => info!("Disabling alarm..")
         }
-        send_command(
+        send_alarm(
           BtAddr::from_str(&mac_address)
             .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?
         )
@@ -96,6 +102,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
           &mut file
         )?;
+      }
+      SendCommand::SetDateTime { datetime } => {
+        send_set_datetime(
+          BtAddr::from_str(&mac_address)
+            .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
+          datetime
+        )
+        .await?
       }
     },
     Convert { convert } => match convert {
