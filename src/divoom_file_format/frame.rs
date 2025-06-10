@@ -24,8 +24,6 @@ impl Frame {
     reader: &mut R,
     previous_palette: &[Rgb<u8>]
   ) -> Result<Frame, Box<dyn Error>> {
-    let mut image = RgbImage::new(16, 16);
-
     let header = FrameHeader::from_reader(reader)?;
 
     let previous_palette = if header.reuse_palette {
@@ -55,6 +53,8 @@ impl Frame {
       reader.take(pixel_data_in_bytes.into()),
       bitstream_io::LittleEndian
     );
+
+    let mut image = RgbImage::new(width, height);
 
     for y in 0..height {
       for x in 0..width {
