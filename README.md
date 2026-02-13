@@ -6,6 +6,19 @@ like changing the image.
 The original app from the vendor is proprietary.
 The protocol however is basic Bluetooth, which can be reverse-engineered.
 
+# futpib's fork
+
+My project contains only the basic commands.
+However, futpib has used it as a foundation and put in the effort
+(with a little help from AI) to create a much more advanced
+version with additional features.
+
+I highly recommend checking it out!
+
+<https://github.com/andreas-mausch/divoom-ditoo-pro-controller/issues/3>
+
+<https://github.com/futpib/divoom-ditoo-pro-controller>
+
 # Blog post
 
 Bluetooth Speaker with 16x16 Display (Divoom Ditoo Pro):
