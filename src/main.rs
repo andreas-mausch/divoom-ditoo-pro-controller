@@ -12,8 +12,7 @@ use Command::{Convert, DebugImage, ListDevices, Send};
 use divoom_ditoo_pro_controller::divoom_file_format::animation::Animation;
 use divoom_ditoo_pro_controller::divoom_file_format::frame::bits_per_pixel;
 use divoom_ditoo_pro_controller::{
-  get_state, list_devices, restore_state, send_alarm, send_divoom_animation, send_set_channel,
-  send_set_datetime, DeviceState
+  get_state, list_devices, send_alarm, send_divoom_animation, send_set_channel, send_set_datetime
 };
 
 /// CLI tool to send bluetooth commands to a Divoom Ditoo Pro
@@ -31,7 +30,7 @@ enum Command {
 
   /// Connects to a Divoom and sends a command.
   /// On Linux: pass the MAC address (AA:BB:CC:DD:EE:FF).
-  /// On macOS: pass the address from list-devices (e.g. b1-21-81-10-b0-4e).
+  /// On macOS: pass the address from list-devices (e.g. aa-bb-cc-dd-ee-ff).
   Send {
     device: String,
     #[command(subcommand)]
@@ -59,11 +58,6 @@ enum SendCommand {
   },
   /// Query current display state (channel and brightness)
   GetSettings,
-  /// Restore a previously read state
-  RestoreState {
-    channel: u8,
-    brightness: u8
-  },
   /// Switch display channel: 0=Clock, 1=Cloud, 2=Equalizer, 3=Custom, 4=Scoreboard, 5=Stopwatch
   SetChannel {
     channel: u8
@@ -103,14 +97,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
       }
       SendCommand::Animation { filename } => {
         let mut file = File::open(filename)?;
-        send_divoom_animation(&device, &mut file)?;
+        send_divoom_animation(&device, &mut file).await?;
       }
       SendCommand::GetSettings => {
         let state = get_state(&device).await?;
         println!("channel={} brightness={}", state.channel, state.brightness);
-      }
-      SendCommand::RestoreState { channel, brightness } => {
-        restore_state(&device, &DeviceState { channel, brightness }).await?;
       }
       SendCommand::SetChannel { channel } => {
         send_set_channel(&device, channel).await?

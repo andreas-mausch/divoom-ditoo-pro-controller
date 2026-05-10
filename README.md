@@ -76,10 +76,10 @@ make run ARGS="list-devices"
 Example output:
 
 ```
-b1-21-81-10-b0-4e  DitooPro-Audio
+aa-bb-cc-dd-ee-ff  DitooPro-Audio
 ```
 
-Use the address (e.g. `b1-21-81-10-b0-4e`) as the `<device>` argument in all commands below.
+Use the address (e.g. `aa-bb-cc-dd-ee-ff`) as the `<device>` argument in all commands below.
 
 ### Linux
 
@@ -104,7 +104,7 @@ All commands follow the pattern:
 Query the current display state (channel and brightness).
 
 ```bash
-./target/release/divoom-ditoo-pro-controller send b1-21-81-10-b0-4e get-settings
+./target/release/divoom-ditoo-pro-controller send aa-bb-cc-dd-ee-ff get-settings
 # channel=0 brightness=80
 ```
 
@@ -125,10 +125,10 @@ Switch the display to a built-in face:
 
 ```bash
 # Switch to clock face
-./target/release/divoom-ditoo-pro-controller send b1-21-81-10-b0-4e set-channel 0
+./target/release/divoom-ditoo-pro-controller send aa-bb-cc-dd-ee-ff set-channel 0
 
 # Switch to custom animation channel
-./target/release/divoom-ditoo-pro-controller send b1-21-81-10-b0-4e set-channel 3
+./target/release/divoom-ditoo-pro-controller send aa-bb-cc-dd-ee-ff set-channel 3
 ```
 
 ### restore-state
@@ -136,21 +136,21 @@ Switch the display to a built-in face:
 Restore a previously saved channel and brightness:
 
 ```bash
-./target/release/divoom-ditoo-pro-controller send b1-21-81-10-b0-4e restore-state 0 80
+./target/release/divoom-ditoo-pro-controller send aa-bb-cc-dd-ee-ff restore-state 0 80
 ```
 
 Useful in scripts: read the state, make changes, then restore:
 
 ```bash
-STATE=$(./target/release/divoom-ditoo-pro-controller send b1-21-81-10-b0-4e get-settings)
+STATE=$(./target/release/divoom-ditoo-pro-controller send aa-bb-cc-dd-ee-ff get-settings)
 # → channel=0 brightness=80
 
-./target/release/divoom-ditoo-pro-controller send b1-21-81-10-b0-4e animation images/witch.divoom16
+./target/release/divoom-ditoo-pro-controller send aa-bb-cc-dd-ee-ff animation images/witch.divoom16
 
 # Restore (parse the saved values)
 CHANNEL=$(echo "$STATE" | grep -o 'channel=[0-9]*' | cut -d= -f2)
 BRIGHTNESS=$(echo "$STATE" | grep -o 'brightness=[0-9]*' | cut -d= -f2)
-./target/release/divoom-ditoo-pro-controller send b1-21-81-10-b0-4e restore-state "$CHANNEL" "$BRIGHTNESS"
+./target/release/divoom-ditoo-pro-controller send aa-bb-cc-dd-ee-ff restore-state "$CHANNEL" "$BRIGHTNESS"
 ```
 
 ### animation
@@ -158,7 +158,7 @@ BRIGHTNESS=$(echo "$STATE" | grep -o 'brightness=[0-9]*' | cut -d= -f2)
 Send a 16×16 Divoom animation file to the display:
 
 ```bash
-./target/release/divoom-ditoo-pro-controller send b1-21-81-10-b0-4e animation images/witch.divoom16
+./target/release/divoom-ditoo-pro-controller send aa-bb-cc-dd-ee-ff animation images/witch.divoom16
 ```
 
 The device switches to the custom channel and plays the animation. Use `set-channel 0` (or `restore-state`) to return to the clock face.
@@ -168,7 +168,7 @@ The device switches to the custom channel and plays the animation. Use `set-chan
 Sync the device's internal clock:
 
 ```bash
-./target/release/divoom-ditoo-pro-controller send b1-21-81-10-b0-4e set-date-time 2025-03-25T21:22:59
+./target/release/divoom-ditoo-pro-controller send aa-bb-cc-dd-ee-ff set-date-time 2025-03-25T21:22:59
 ```
 
 This updates the clock but does not exit animation mode. Send `set-channel 0` afterwards to show the clock face.
@@ -176,8 +176,8 @@ This updates the clock but does not exit animation mode. Send `set-channel 0` af
 ### alarm
 
 ```bash
-./target/release/divoom-ditoo-pro-controller send b1-21-81-10-b0-4e alarm true
-./target/release/divoom-ditoo-pro-controller send b1-21-81-10-b0-4e alarm false
+./target/release/divoom-ditoo-pro-controller send aa-bb-cc-dd-ee-ff alarm true
+./target/release/divoom-ditoo-pro-controller send aa-bb-cc-dd-ee-ff alarm false
 ```
 
 ---
@@ -225,6 +225,9 @@ Save the sound file as `sounds/familymart.mp3`. If it's missing the hook falls b
 
 ```json
 {
+  "env": {
+    "DIVOOM_DEVICE": "aa-bb-cc-dd-ee-ff"
+  },
   "hooks": {
     "Stop": [
       {
@@ -240,7 +243,7 @@ Save the sound file as `sounds/familymart.mp3`. If it's missing the hook falls b
 }
 ```
 
-Update the path to match your local checkout.
+Replace `aa-bb-cc-dd-ee-ff` with your device address (from `list-devices`) and update the path to match your local checkout. The script reads `DIVOOM_DEVICE` from the environment and exits silently if it is not set.
 
 ### How it works
 

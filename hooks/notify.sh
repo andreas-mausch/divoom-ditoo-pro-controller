@@ -19,7 +19,8 @@ BINARY="$PROJECT_DIR/target/release/divoom-ditoo-pro-controller"
 MASCOT="$PROJECT_DIR/images/claude.divoom16"
 DEFAULT_SOUND="$PROJECT_DIR/sounds/familymart.mp3"
 SOUND="${1:-$DEFAULT_SOUND}"
-DEVICE="${DIVOOM_DEVICE:-b1-21-81-10-b0-4e}"
+DEVICE="${DIVOOM_DEVICE:-}"
+[[ -n "$DEVICE" ]] || exit 0  # no device configured — skip silently
 LOG="$PROJECT_DIR/hooks/notify.log"
 
 # Exit silently if the binary or mascot image is not in place

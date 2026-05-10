@@ -36,9 +36,9 @@ make test
 ## Run a command during development
 
 ```bash
-make run ARGS="send b1-21-81-10-b0-4e get-settings"
-make run ARGS="send b1-21-81-10-b0-4e set-channel 0"
-make run ARGS="send b1-21-81-10-b0-4e animation images/witch.divoom16"
+make run ARGS="send aa-bb-cc-dd-ee-ff get-settings"
+make run ARGS="send aa-bb-cc-dd-ee-ff set-channel 0"
+make run ARGS="send aa-bb-cc-dd-ee-ff animation images/witch.divoom16"
 ```
 
 `make run` rebuilds and re-signs before running.
