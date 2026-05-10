@@ -5,6 +5,8 @@ use std::io::Read;
 use std::time::Duration;
 #[cfg(target_os = "linux")]
 use bluetooth_serial_port::{scan_devices, BtAddr, BtProtocol, BtSocket};
+#[cfg(target_os = "linux")]
+use libc;
 
 use chrono::{NaiveDateTime, NaiveTime};
 use log::{debug, info};
@@ -19,6 +21,19 @@ use crate::protocol::datetime::DateTime;
 use crate::protocol::packet::Packet;
 
 // ── macOS IOBluetooth FFI ────────────────────────────────────────────────────
+
+#[cfg(target_os = "macos")]
+#[no_mangle]
+/// # Safety
+/// `msg` must be a valid, non-null, null-terminated C string for the duration of this call.
+pub unsafe extern "C" fn bt_log(level: u8, msg: *const std::os::raw::c_char) {
+  let s = std::ffi::CStr::from_ptr(msg).to_string_lossy();
+  match level {
+    0 => log::debug!(target: "bt", "{}", s),
+    1 => log::info!(target: "bt", "{}", s),
+    _ => log::warn!(target: "bt", "{}", s),
+  }
+}
 
 #[cfg(target_os = "macos")]
 extern "C" {
@@ -179,6 +194,56 @@ fn query(device: &str, packet: &Packet, timeout_ms: u32) -> Result<Vec<u8>, Box<
   Ok(out_buf)
 }
 
+// ── query (Linux) ─────────────────────────────────────────────────────────────
+
+#[cfg(target_os = "linux")]
+fn query(device: &str, packet: &Packet, timeout_ms: u32) -> Result<Vec<u8>, Box<dyn Error>> {
+  use std::io::{Read, Write};
+  use std::os::unix::io::AsRawFd;
+  use std::str::FromStr;
+  let mac = BtAddr::from_str(device).map_err(|_| format!("Invalid MAC address: '{}'", device))?;
+  let mut socket = BtSocket::new(BtProtocol::RFCOMM)?;
+  socket.connect(mac)?;
+  info!("Connection successful, socket over RFCOMM/SPP acquired");
+  let secs = (timeout_ms / 1000) as libc::time_t;
+  let usecs = ((timeout_ms % 1000) * 1000) as libc::suseconds_t;
+  let tv = libc::timeval { tv_sec: secs, tv_usec: usecs };
+  unsafe {
+    libc::setsockopt(
+      socket.as_raw_fd(),
+      libc::SOL_SOCKET,
+      libc::SO_RCVTIMEO,
+      &tv as *const _ as *const libc::c_void,
+      std::mem::size_of::<libc::timeval>() as libc::socklen_t,
+    );
+  }
+  let serialized = packet.serialize()?;
+  debug!("query packet: {}", hex::encode(&serialized));
+  socket.write_all(&serialized)?;
+  let mut buf = Vec::new();
+  let mut byte = [0u8; 1];
+  loop {
+    match socket.read(&mut byte) {
+      Ok(0) => break,
+      Ok(_) => {
+        buf.push(byte[0]);
+        if byte[0] == 0x02 {
+          break;
+        }
+      }
+      Err(e)
+        if e.kind() == std::io::ErrorKind::WouldBlock
+          || e.kind() == std::io::ErrorKind::TimedOut =>
+      {
+        break
+      }
+      Err(e) => return Err(e.into()),
+    }
+  }
+  debug!("query response: {}", hex::encode(&buf));
+  Ok(buf)
+}
+
 // ── response parsing ──────────────────────────────────────────────────────────
 
 fn parse_settings_response(bytes: &[u8]) -> Result<DeviceState, Box<dyn Error>> {
@@ -249,23 +314,8 @@ pub async fn get_state(device: &str) -> Result<DeviceState, Box<dyn Error>> {
     command: Command::GetSettings,
     payload: vec![]
   };
-  #[cfg(target_os = "macos")]
-  {
-    let response = query(device, &packet, 3000)?;
-    return parse_settings_response(&response);
-  }
-  #[cfg(not(target_os = "macos"))]
-  {
-    let _ = packet;
-    Err("get_state not implemented on this platform".into())
-  }
-}
-
-pub async fn restore_state(device: &str, state: &DeviceState) -> Result<(), Box<dyn Error>> {
-  send_set_channel(device, state.channel).await?;
-  // TODO: send_set_brightness(device, state.brightness) once command byte is confirmed via sniffing
-  info!("State restored: channel={} (brightness={} not yet sent — command byte unknown)", state.channel, state.brightness);
-  Ok(())
+  let response = query(device, &packet, 3000)?;
+  parse_settings_response(&response)
 }
 
 pub async fn send_set_channel(device: &str, channel: u8) -> Result<(), Box<dyn Error>> {
@@ -294,7 +344,7 @@ pub async fn send_alarm(device: &str) -> Result<(), Box<dyn Error>> {
   send(device, &[packet])
 }
 
-pub fn send_divoom_animation<R: Read>(
+pub async fn send_divoom_animation<R: Read>(
   device: &str,
   reader: &mut R
 ) -> Result<(), Box<dyn Error>> {
