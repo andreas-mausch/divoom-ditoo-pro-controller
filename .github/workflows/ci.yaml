@@ -19,3 +19,13 @@ jobs:
       - run: cargo check
       - run: cargo build --verbose --release --all-features
       - run: cargo test --verbose --all
+
+  compile_check_macos:
+    name: macOS Build + Sign Check
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup update stable && rustup default stable
+      - run: cargo build --release
+      - run: codesign -s - --entitlements divoom.entitlements --force target/release/divoom-ditoo-pro-controller
+      - run: codesign -dv target/release/divoom-ditoo-pro-controller
