@@ -1,20 +1,18 @@
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
-use std::str::FromStr;
 
-use bluetooth_serial_port::BtAddr;
 use chrono::NaiveDateTime;
 use clap::{Parser, Subcommand};
 use env_logger::{Builder, Env};
-use log::{debug, info};
+use log::info;
 
 use Command::{Convert, DebugImage, ListDevices, Send};
 
 use divoom_ditoo_pro_controller::divoom_file_format::animation::Animation;
 use divoom_ditoo_pro_controller::divoom_file_format::frame::bits_per_pixel;
 use divoom_ditoo_pro_controller::{
-  list_devices, send_alarm, send_divoom_animation, send_set_datetime
+  get_state, list_devices, send_alarm, send_divoom_animation, send_set_channel, send_set_datetime
 };
 
 /// CLI tool to send bluetooth commands to a Divoom Ditoo Pro
@@ -27,14 +25,14 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Command {
-  /// Lists all available bluetooth devices and tries to find a Divoom
+  /// Lists available Bluetooth devices (Linux: scans 20s; macOS: lists paired devices)
   ListDevices,
 
-  /// Connects to a Divoom via it's MAC address and sends a command
-  // BtAddr uses FromStr -> Err<()>, which doesn't work with clap:
-  // https://github.com/clap-rs/clap/issues/5360
+  /// Connects to a Divoom and sends a command.
+  /// On Linux: pass the MAC address (AA:BB:CC:DD:EE:FF).
+  /// On macOS: pass the address from list-devices (e.g. aa-bb-cc-dd-ee-ff).
   Send {
-    mac_address: String,
+    device: String,
     #[command(subcommand)]
     send: SendCommand
   },
@@ -57,6 +55,12 @@ enum SendCommand {
   },
   Animation {
     filename: String
+  },
+  /// Query current display state (channel and brightness)
+  GetSettings,
+  /// Switch display channel: 0=Clock, 1=Cloud, 2=Equalizer, 3=Custom, 4=Scoreboard, 5=Stopwatch
+  SetChannel {
+    channel: u8
   },
   SetDateTime {
     datetime: NaiveDateTime
@@ -83,33 +87,27 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
   match args.command {
     ListDevices => list_devices().await?,
-    Send { mac_address, send } => match send {
+    Send { device, send } => match send {
       SendCommand::Alarm { enable } => {
         match enable {
           true => info!("Enabling alarm.."),
           false => info!("Disabling alarm..")
         }
-        send_alarm(
-          BtAddr::from_str(&mac_address)
-            .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?
-        )
-        .await?
+        send_alarm(&device).await?
       }
       SendCommand::Animation { filename } => {
         let mut file = File::open(filename)?;
-        send_divoom_animation(
-          BtAddr::from_str(&mac_address)
-            .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
-          &mut file
-        )?;
+        send_divoom_animation(&device, &mut file).await?;
+      }
+      SendCommand::GetSettings => {
+        let state = get_state(&device).await?;
+        println!("channel={} brightness={}", state.channel, state.brightness);
+      }
+      SendCommand::SetChannel { channel } => {
+        send_set_channel(&device, channel).await?
       }
       SendCommand::SetDateTime { datetime } => {
-        send_set_datetime(
-          BtAddr::from_str(&mac_address)
-            .map_err(|_| format!("Invalid MAC address: '{}'", mac_address))?,
-          datetime
-        )
-        .await?
+        send_set_datetime(&device, datetime).await?
       }
     },
     Convert { convert } => match convert {
@@ -129,16 +127,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
       }
     },
     DebugImage { filename } => {
+      use log::debug;
       let animation = Animation::from_16x16(&mut BufReader::new(File::open(filename)?))?;
       animation
         .frames
         .iter()
         .enumerate()
         .for_each(|(index, frame)| {
-          let bits_per_pixel = bits_per_pixel(frame.palette.len() as u32);
-          let pixel_data_in_bits = 16 * 16 * bits_per_pixel as u32;
+          let bpp = bits_per_pixel(frame.palette.len() as u32);
+          let pixel_data_in_bits = 16 * 16 * bpp as u32;
           let pixel_data_in_bytes = pixel_data_in_bits.div_ceil(8);
-
           debug!("Frame #{}", index);
           debug!(
             "  Pixel data size: {} bits = {} bytes",
@@ -148,7 +146,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
           debug!(
             "  Color count: {} / Bits per pixel: {}",
             frame.palette.len(),
-            bits_per_pixel
+            bpp
           );
           debug!(
             "  Local palette: {:?}",
