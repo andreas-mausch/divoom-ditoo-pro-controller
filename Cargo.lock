@@ -411,6 +411,7 @@ dependencies = [
  "hex",
  "image",
  "indexmap",
+ "libc",
  "log",
  "spectral",
  "time",
