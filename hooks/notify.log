@@ -1,0 +1,42 @@
+[2026-05-10T13:47:29Z DEBUG divoom_ditoo_pro_controller] query packet: 01030046490002
+[bt] SPP channel from SDP: 2
+[bt] query sent 7 byte(s), waiting for response...
+[bt] received 48 byte(s): 01 1B 00 04 46 55 00 00 00 FF FF 00 4A 00 01 03 4A 00 FF 50 00 00 01 00 00 00 35 31 06 05 02 01 0D 00 04 F7 55 4E 6F 62 02 40 04 00 00 C2 02 02
+[2026-05-10T13:47:30Z DEBUG divoom_ditoo_pro_controller] query response: 011b00044655000000ffff004a0001034a00ff500000010000003531060502010d0004f7554e6f620240040000c20202
+[2026-05-10T13:47:30Z INFO  divoom_ditoo_pro_controller] Connecting to b1-21-81-10-b0-4e via IOBluetooth RFCOMM
+[2026-05-10T13:47:30Z DEBUG divoom_ditoo_pro_controller]   packet 1: 0108008b002d000000c00002
+[2026-05-10T13:47:30Z DEBUG divoom_ditoo_pro_controller]   packet 2: 0137008b012d0000000000aa2d0000000002000000d777570000f81ff81f98199819fc3ffc3ff81ff81f500a500a00000000000000000000560c02
+[bt] SPP channel from SDP: 2
+[bt] RFCOMM channel open — sending 2 packet(s)
+[bt] sent packet 1/2 (12 bytes)
+[bt] sent packet 2/2 (59 bytes)
+[2026-05-10T13:47:30Z INFO  divoom_ditoo_pro_controller] All 2 packet(s) sent
+2026-05-10T13:47:30Z [notify] Sound not found: /Users/ruwuka/Documents/divoom/divoom-ditoo-pro-controller/sounds/familymart.mp3 — put familymart.mp3 in sounds/
+[2026-05-10T13:47:33Z INFO  divoom_ditoo_pro_controller] Connecting to b1-21-81-10-b0-4e via IOBluetooth RFCOMM
+[2026-05-10T13:47:33Z DEBUG divoom_ditoo_pro_controller]   packet 1: 0104004500490002
+[bt] SPP channel from SDP: 2
+[bt] RFCOMM channel open — sending 1 packet(s)
+[bt] sent packet 1/1 (8 bytes)
+[2026-05-10T13:47:33Z INFO  divoom_ditoo_pro_controller] All 1 packet(s) sent
+[2026-05-10T13:47:33Z INFO  divoom_ditoo_pro_controller] State restored: channel=0 (brightness=80 not yet sent — command byte unknown)
+[2026-05-10T13:47:59Z DEBUG divoom_ditoo_pro_controller] query packet: 01030046490002
+[bt] SPP channel from SDP: 2
+[bt] query sent 7 byte(s), waiting for response...
+[bt] received 48 byte(s): 01 1B 00 04 46 55 00 00 00 FF FF 00 4A 00 01 03 4A 00 FF 50 00 00 01 00 00 00 39 04 DD 04 02 01 0D 00 04 F7 55 4E 6F 62 02 40 04 00 00 C2 02 02
+[2026-05-10T13:48:01Z DEBUG divoom_ditoo_pro_controller] query response: 011b00044655000000ffff004a0001034a00ff500000010000003904dd0402010d0004f7554e6f620240040000c20202
+[2026-05-10T13:48:01Z INFO  divoom_ditoo_pro_controller] Connecting to b1-21-81-10-b0-4e via IOBluetooth RFCOMM
+[2026-05-10T13:48:01Z DEBUG divoom_ditoo_pro_controller]   packet 1: 0108008b002d000000c00002
+[2026-05-10T13:48:01Z DEBUG divoom_ditoo_pro_controller]   packet 2: 0137008b012d0000000000aa2d0000000002000000d777570000f81ff81f98199819fc3ffc3ff81ff81f500a500a00000000000000000000560c02
+[bt] SPP channel from SDP: 2
+[bt] RFCOMM channel open — sending 2 packet(s)
+[bt] sent packet 1/2 (12 bytes)
+[bt] sent packet 2/2 (59 bytes)
+[2026-05-10T13:48:01Z INFO  divoom_ditoo_pro_controller] All 2 packet(s) sent
+2026-05-10T13:48:01Z [notify] Sound not found: /Users/ruwuka/Documents/divoom/divoom-ditoo-pro-controller/sounds/familymart.mp3 — put familymart.mp3 in sounds/
+[2026-05-10T13:48:04Z INFO  divoom_ditoo_pro_controller] Connecting to b1-21-81-10-b0-4e via IOBluetooth RFCOMM
+[2026-05-10T13:48:04Z DEBUG divoom_ditoo_pro_controller]   packet 1: 0104004500490002
+[bt] SPP channel from SDP: 2
+[bt] RFCOMM channel open — sending 1 packet(s)
+[bt] sent packet 1/1 (8 bytes)
+[2026-05-10T13:48:04Z INFO  divoom_ditoo_pro_controller] All 1 packet(s) sent
+[2026-05-10T13:48:04Z INFO  divoom_ditoo_pro_controller] State restored: channel=0 (brightness=80 not yet sent — command byte unknown)
